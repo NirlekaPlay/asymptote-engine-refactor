@@ -1,0 +1,72 @@
+--!strict
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local AlertLevels = require(ReplicatedStorage.shared.world.stealth.alertlevel.AlertLevels)
+local ClientBoundDialogueConceptsPayload = require(ReplicatedStorage.shared.network.payloads.ClientBoundDialogueConceptsPayload)
+local ClientBoundObjectivesInfoPayload = require(ReplicatedStorage.shared.network.payloads.ClientBoundObjectivesInfoPayload)
+local TypedRemote = require(ReplicatedStorage.shared.thirdparty.TypedRemote)
+
+local _, RE, URE = TypedRemote.parent()
+
+type RF<T..., R...> = TypedRemote.Function<T..., R...>
+type RE<T...> = TypedRemote.Event<T...>
+type URE<T...> = TypedRemote.UnreliableEvent<T...>
+
+local playerHeadRotationJointRemote = TypedRemote.unreliableEvent("PlayerHeadRotation")
+
+return {
+	Detection = URE("Detection") :: URE<{DetectionPayload.DetectionData}>,
+	BubbleChat = RE("BubbleChat") :: RE<BasePart, string?>,
+	Status = RE("Status") :: RE<{ [string]: true }>,
+	AlertLevel = RE("AlertLevel") :: RE<AlertLevels.AlertLevel>,
+	--
+	ServerboundPlayerHeadRotation = playerHeadRotationJointRemote :: URE<Vector3>,
+	ClientboundPlayerHeadRotation = playerHeadRotationJointRemote :: URE<Player, Vector3>,
+	--
+	JoinTestingServer = RE("JoinTestingServer") :: RE<>,
+	JoinStableServer = RE("JoinStableServer") :: RE<>,
+	--
+	BrainDebugDump = RE("BrainDebugDump") :: RE<{BrainDebugPayload.BrainDump}>,
+	SubscribeDebugDump = RE("SubscribeDebugDump") :: RE<string, boolean>,
+	ClientBoundDynamicDebugDump = RE("ClientBoundDynamicDebugDump") :: RE<string, any>,
+	--
+	ClientBoundChatMessage = RE("ClientBoundChatMessage") :: RE<ClientBoundChatMessagePayload.ClientBoundChatMessagePayload>,
+	--
+	ServerBoundGlobalStatesReplicateRequest = RE("ServerBoundGlobalStatesReplicateRequest") :: RE<>,
+	ClientBoundReplicateIndividualGlobalStates = RE("ClientBoundReplicateGlobalStates") :: RE<string, any>,
+	ClientBoundReplicateAllGlobalStates = RE("ClientBoundReplicateAllGlobalStates") :: RE<{[string]:any}>,
+	--
+	ClientBoundLocalizationAppend = RE("ClientBoundLocalizationAppend") :: RE<{[string]:string}>,
+	--
+	ClientBoundCharacterAppearances = RE("ClientBoundCharacterAppearance") :: RE<{CharacterAppearancePayload.CharacterAppearancePayload}>,
+	--
+	ClientBoundObjectivesInfo = RE("ClientBoundObjectivesInfo") :: RE<ClientBoundObjectivesInfoPayload.ObjectivesInfoPayload>,
+	ClientBoundMissionConcluded = RE("ClientBoundMissionConcluded") :: RE<CameraSocket.CameraSocket, boolean>,
+	ClientBoundMissionStart = RE("ClientBoundMissionStart") :: RE<>,
+	--
+	ClientBoundTeleportReady = RE("ClientBoundTeleportReady"),
+	ServerBoundPlayerTeleportReady = RE("ServerBoundPlayerTeleportReady"),
+	ServerBoundPlayerWantRestart = RE("ServerBoundPlayerWantRestart"),
+	ClientBoundRemainingRestartPlayers = RE("ClientBoundRemainingRestartPlayers") :: RE<number, number>,
+	ClientBoundServerMatchInfo = RE("ClientBoundServerMatchInfo") :: RE<string, { isConcluded: boolean, isFailed: boolean, cameraSocket: CameraSocket.CameraSocket}>,
+	--
+	ClientBoundTween = RE("ClientBoundTween") :: RE<LocalTweenPayload.LocalTweenPayload>,
+	--
+	ClientBoundForeignChatMessage = RE("ClientBoundForeign") :: RE<Player, string>,
+	ServerBoundClientForeignChatted = RE("ServerBoundForeign") :: RE<string>,
+	--
+	ClientBoundDialogueConceptEvaluate = RE("ClientBoundDialogueConceptEvaluate") :: RE<string, {[string]:any}>,
+	ClientBoundRegisterDialogueConcepts = RE("ClientBoundRegisterConcepts") :: RE<ClientBoundDialogueConceptsPayload.ClientBoundDialogueConceptsPayload>,
+	--
+	ServerboundPlayerSendCommand = RE("ServerboundPlayerSendCommand") :: RE<string>,
+	ClientboundCommandsPacket = RE("ClientboundCommandsPacket") :: RE<any>,
+	--
+	ClientboundSetPlayerModuleDisability = RE("ClientboundSetPlayerModuleDisability") :: RE<boolean>,
+	--
+	ServerboundStopBodyDrag = RE("ClientboundStopBodyDrag") :: RE<>,
+	--
+	ClientboundCinematicsData = RE("ClientboundCinematicsData") :: RE<any>,
+	ClientboundCinematicsPlayScene = RE("ClientboundCinematicsPlayScene") :: RE<string>,
+	ServerboundCinematicsPlayerIntroDone = RE("ServerboundCinematicsPlayerIntroDone") :: RE<>
+}

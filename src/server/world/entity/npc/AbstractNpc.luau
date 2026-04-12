@@ -1,0 +1,186 @@
+--!strict
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+local DebugPackets = require(ReplicatedStorage.shared.network.DebugPackets)
+local Maid = require(ReplicatedStorage.shared.util.misc.Maid)
+local Entity = require(ServerScriptService.server.world.entity.Entity)
+local Brain = require(ServerScriptService.server.world.entity.ai.Brain)
+local RagdollControl = require(ServerScriptService.server.world.entity.ai.control.RagdollControl)
+local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.memory.MemoryModuleTypes)
+local TestNpcAi = require(ServerScriptService.server.world.entity.npc.TestNpcAi)
+local EntityInLevelCallback = require(ServerScriptService.server.world.level.entity.EntityInLevelCallback)
+local Scene = require(ServerScriptService.server.world.level.scene.Scene)
+local CollisionGroupTypes = require(ServerScriptService.server.world.physics.collision.CollisionGroupTypes)
+
+local DEFAULT_SIGHT_RADIUS = 50
+local DEFAULT_HEARING_RADIUS = 10
+local DEFAULT_PERIPH_VISION_ANGLE = 180
+
+--[=[
+	@class AbstractNpc
+]=]
+local AbstractNpc = {}
+AbstractNpc.__index = AbstractNpc
+
+type Brain = Brain.Brain<any>
+
+function AbstractNpc.new(scene, character: Model)
+	local self = setmetatable({}, AbstractNpc)
+
+	self.uuid = "UNSET"
+	self.scene = scene
+	self.character = character
+	self.primaryPart = character.PrimaryPart :: BasePart
+	self.levelCallback = EntityInLevelCallback.NULL
+	self.brain = TestNpcAi.makeBrain(self :: any)
+	self.typeId = "npc"
+	self.humanoid = (character :: any).Humanoid :: Humanoid
+	self._maid = Maid.new()
+
+	for _, part in character:GetDescendants() do
+		if part:IsA("BasePart") then
+			if part.Parent == character then
+				part.CollisionGroup = CollisionGroupTypes.NPC_CHAR
+			else
+				part.CollisionGroup = CollisionGroupTypes.NON_COLLIDE_WITH_PLAYER
+			end
+		end
+	end
+
+	local descendantAddedConnection = character.DescendantAdded:Connect(function(inst)
+		-- make the Agent not collide with players
+		-- exclude "RagdollColliderPart" as those are ragdoll parts.
+		-- making them not have collision will result in weird looking ragdolls.
+		if inst:IsA("BasePart") and inst.Name ~= RagdollControl.RAGDOLL_COLLIDER_PART_NAME then
+			inst.CollisionGroup = CollisionGroupTypes.NON_COLLIDE_WITH_PLAYER
+		end
+	end)
+
+	self._maid:giveTask(descendantAddedConnection)
+
+	return self
+end
+
+--
+
+function AbstractNpc.update(self, deltaTime: number): ()
+	debug.profilebegin("Npc.update")
+	debug.profilebegin("brain")
+	TestNpcAi.updateActivity(self)
+	self.brain:update(deltaTime)
+	self:sendDebugPackets()
+	debug.profileend()
+	debug.profileend()
+end
+
+function AbstractNpc.getPosition(self): Vector3
+	return self.character.HumanoidRootPart.Position
+end
+
+function AbstractNpc.getWorldInstance(self): Instance
+	return self.character
+end
+
+function AbstractNpc.getUuid(self): string
+	return self.uuid
+end
+
+function AbstractNpc.setLevelCallback(self, levelCallback): ()
+	self.levelCallback = levelCallback
+end
+
+function AbstractNpc.remove(self, removalReason: Entity.RemovalReason): ()
+	self.removalReason = removalReason
+	self.levelCallback:onRemove(removalReason)
+	self:onRemove() -- ???
+end
+
+function AbstractNpc.isRemoved(self): boolean
+	return self.removalReason ~= nil
+end
+
+function AbstractNpc.setPosToCFrame(self, cframe: CFrame): ()
+	self.character:PivotTo(cframe)
+end
+
+--
+
+function AbstractNpc.finalizeSpawn(self): ()
+	-- Client tag
+	local char = self.character
+	local tag = char:GetAttribute("ClientTag") :: string?
+	if tag and tag ~= "" then
+		char:AddTag(tag)
+	end
+
+	-- Nodes for patrolling
+	local nodeGroup = char:GetAttribute("Nodes")
+	if nodeGroup and type(nodeGroup) == "string" then
+		local nodes = self:getScene().navMesh:getPostGroup(nodeGroup)
+		local nodesCount = #nodes
+		self:setDesignatedPosts(nodes)
+
+		local randomNodeIndex = self:getScene():getRandom():NextInteger(1, nodesCount)
+		local selectedRandomNode = nodes[randomNodeIndex]
+		local nodeCframe = selectedRandomNode.cframe :: CFrame
+
+		local offsetPosition = nodeCframe.Position
+		char:PivotTo(CFrame.new(offsetPosition, offsetPosition + nodeCframe.LookVector))
+	end
+
+	-- Finalize
+	char.Parent = workspace
+end
+
+function AbstractNpc.getPrimaryPart(self): BasePart
+	return self.primaryPart
+end
+
+function AbstractNpc.getHumanoid(self): Humanoid
+	return self.humanoid
+end
+
+--
+
+function AbstractNpc.getScene(self): Scene.Scene
+	return self.scene
+end
+
+function AbstractNpc.getBrain(self): Brain
+	return self.brain
+end
+
+--
+
+function AbstractNpc.getCharacterName(self): string
+	return self.character:GetAttribute("CharName")
+end
+
+function AbstractNpc.sendDebugPackets(self): ()
+	DebugPackets.sendEntityBrain(self)
+end
+
+function AbstractNpc.setDesignatedPosts(self, posts): ()
+	self.brain:setMemory(MemoryModuleTypes.DESIGNATED_POSTS, posts)
+end
+
+function AbstractNpc.getSightRadius(self): number
+	return (self.character:GetAttribute("SightRadius") :: number?) or DEFAULT_SIGHT_RADIUS
+end
+
+function AbstractNpc.getHearingRadius(self): number
+	return (self.character:GetAttribute("HearingRadius") :: number?) or DEFAULT_HEARING_RADIUS
+end
+
+function AbstractNpc.getPeripheralVisionAngle(self): number
+	return (self.character:GetAttribute("PeriphAngle") :: number?) or DEFAULT_PERIPH_VISION_ANGLE
+end
+
+--
+
+function AbstractNpc.onRemove(self): ()
+	self._maid:doCleaning()
+end
+
+return AbstractNpc
