@@ -279,6 +279,154 @@ def to_dot(graph: dict) -> str:
 	lines.append("}")
 	return "\n".join(lines)
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Full-project graph
+# ──────────────────────────────────────────────────────────────────────────────
+
+def build_full_project_graph(
+	root_dir: Path,
+	rojo_mappings: dict[str, Path],
+	exclude_globs: list[str] | None = None,
+) -> dict:
+	"""
+	Discover every .lua / .luau file under root_dir, build a merged
+	dependency graph, and annotate nodes with role classification.
+	"""
+	exclude_globs = exclude_globs or []
+	all_files: list[Path] = []
+	for ext in ("*.lua", "*.luau"):
+		all_files.extend(root_dir.rglob(ext))
+
+	# Filter out any excluded patterns (e.g. Packages/, node_modules/)
+	def is_excluded(p: Path) -> bool:
+		rel = str(p.relative_to(root_dir))
+		return any(p.match(g) or rel.startswith(g.rstrip("/")) for g in exclude_globs)
+
+	all_files = [f for f in all_files if not is_excluded(f)]
+	print(f"[info] Found {len(all_files)} Lua/Luau files", file=sys.stderr)
+
+	merged_nodes: dict[str, dict] = {}
+	merged_edges: list[dict] = []
+	seen_edges: set[tuple[str, str]] = set()
+
+	for file in all_files:
+		g = build_graph(file, root_dir, rojo_mappings, max_depth=-1, recurse=True)
+		for node in g["nodes"]:
+			merged_nodes.setdefault(node["id"], node)
+		for edge in g["edges"]:
+			key = (edge["from"], edge["to"])
+			if key not in seen_edges:
+				seen_edges.add(key)
+				merged_edges.append(edge)
+
+	# ── Compute degree ────────────────────────────────────────────────────────
+	in_degree:  dict[str, int] = {nid: 0 for nid in merged_nodes}
+	out_degree: dict[str, int] = {nid: 0 for nid in merged_nodes}
+	for edge in merged_edges:
+		out_degree[edge["from"]] = out_degree.get(edge["from"], 0) + 1
+		in_degree[edge["to"]]   = in_degree.get(edge["to"], 0) + 1
+
+	hub_threshold = max(3, len(merged_nodes) // 20)  # top ~5% by in-degree
+
+	for nid, node in merged_nodes.items():
+		ind  = in_degree.get(nid, 0)
+		outd = out_degree.get(nid, 0)
+		if ind == 0 and outd == 0:
+			role = "orphan"
+		elif ind == 0 and outd > 0:
+			role = "root"
+		elif ind >= hub_threshold:
+			role = "hub"
+		elif outd == 0:
+			role = "leaf"
+		else:
+			role = "normal"
+		node["role"] = role
+		node["in_degree"]  = ind
+		node["out_degree"] = outd
+
+	return {
+		"nodes": list(merged_nodes.values()),
+		"edges": merged_edges,
+		"stats": {
+			"total_files": len(all_files),
+			"total_nodes": len(merged_nodes),
+			"total_edges": len(merged_edges),
+			"orphans": sum(1 for n in merged_nodes.values() if n["role"] == "orphan"),
+			"roots":   sum(1 for n in merged_nodes.values() if n["role"] == "root"),
+			"hubs":    sum(1 for n in merged_nodes.values() if n["role"] == "hub"),
+			"hub_threshold": hub_threshold,
+		},
+	}
+
+
+def to_dot_full(graph: dict) -> str:
+	COLOR = {
+		"orphan": "#ff6b6b",  # red   — unused / dead code
+		"root":   "#ffd700",  # gold  — entry points
+		"hub":    "#ff9966",  # orange — heavily imported
+		"leaf":   "#d0e8ff",  # light blue — pure utilities
+		"normal": "#f0f0f0",  # grey
+	}
+	lines = [
+		"digraph project_deps {",
+		"  rankdir=LR;",
+		'  node [shape=box, style=filled, fontname="Helvetica", fontsize=10];',
+		'  edge [fontsize=8];',
+		# Invisible rank-grouping for orphans
+		"  subgraph cluster_orphans {",
+		'    label="Orphaned (unreachable)"; style=dashed; color="#ff6b6b";',
+	]
+	for node in graph["nodes"]:
+		if node["role"] == "orphan":
+			nid = node["id"].replace('"', '\\"')
+			lines.append(f'    "{nid}";')
+	lines.append("  }")
+
+	for node in graph["nodes"]:
+		if node["role"] == "orphan":
+			continue  # already in subgraph
+		nid   = node["id"].replace('"', '\\"')
+		label = node["label"].replace('"', '\\"')
+		role  = node.get("role", "normal")
+		color = COLOR.get(role, COLOR["normal"])
+		ind, outd = node.get("in_degree", 0), node.get("out_degree", 0)
+		tip = f"{role} | in={ind} out={outd}"
+		lines.append(
+			f'  "{nid}" [label="{label}", fillcolor="{color}", tooltip="{tip}"];'
+		)
+
+	for edge in graph["edges"]:
+		lines.append(f'  "{edge["from"]}" -> "{edge["to"]}";')
+	lines.append("}")
+	return "\n".join(lines)
+
+
+def print_summary(graph: dict):
+	s = graph["stats"]
+	print(f"\n{'─'*50}")
+	print(f"  Files scanned : {s['total_files']}")
+	print(f"  Nodes         : {s['total_nodes']}")
+	print(f"  Edges         : {s['total_edges']}")
+	print(f"  Orphans       : {s['orphans']}  (no imports, not imported)")
+	print(f"  Roots         : {s['roots']}   (entry points, not imported by anyone)")
+	print(f"  Hubs          : {s['hubs']}    (imported by ≥{s['hub_threshold']} others)")
+	print(f"{'─'*50}\n")
+
+	if s["orphans"]:
+		print("Orphaned modules (potential dead code):")
+		for n in graph["nodes"]:
+			if n["role"] == "orphan":
+				print(f"  ✗  {n['id']}")
+		print()
+
+	print("Hubs (most-imported):")
+	hubs = sorted(
+		[n for n in graph["nodes"] if n["role"] == "hub"],
+		key=lambda n: n["in_degree"], reverse=True
+	)
+	for n in hubs[:15]:
+		print(f"  ★  {n['id']}  (imported by {n['in_degree']})")
 
 # ──────────────────────────────────────────────────────────────────────────────
 # CLI
@@ -288,7 +436,8 @@ def main():
 	parser = argparse.ArgumentParser(
 		description="Lua/Luau dependency graph extractor with Rojo support"
 	)
-	parser.add_argument("entry", help="Entry Lua/Luau file")
+	parser.add_argument("entry", nargs="?", default=None,   # ← now optional
+						help="Entry Lua/Luau file (omit when using --project)")
 	parser.add_argument("--root", default=None,
 						help="Repo root for resolving paths (default: cwd)")
 	parser.add_argument("--rojo", default=None,
@@ -300,23 +449,25 @@ def main():
 						help="Max traversal depth (-1 = unlimited)")
 	parser.add_argument("--no-recurse", action="store_true",
 						help="Only parse the entry file")
+	parser.add_argument("--project", action="store_true",
+						help="Scan the entire repo and emit a full project graph")
+	parser.add_argument("--exclude", nargs="*", default=["Packages/", "node_modules/", ".git/"],
+						help="Path prefixes to exclude (default: Packages/ node_modules/)")
 	args = parser.parse_args()
 
-	entry = Path(args.entry)
-	if not entry.is_file():
-		print(f"Error: '{entry}' is not a file.", file=sys.stderr)
-		sys.exit(1)
+	# Validate: need entry XOR --project
+	if not args.project and not args.entry:
+		parser.error("entry file is required unless --project is specified")
 
-	# Repo root: explicit --root, or cwd
 	repo_root = Path(args.root).resolve() if args.root else Path.cwd()
 
 	# Auto-detect Rojo project file
 	rojo_file: Path | None = None
+	search_start = Path(args.entry).resolve().parent if args.entry else repo_root
 	if args.rojo:
 		rojo_file = Path(args.rojo)
 	else:
-		# Walk up from entry looking for default.project.json
-		candidate = entry.resolve().parent
+		candidate = search_start
 		while True:
 			p = candidate / "default.project.json"
 			if p.is_file():
@@ -331,11 +482,24 @@ def main():
 		rojo_mappings = load_rojo_mappings(rojo_file, repo_root)
 		print(f"[info] Loaded Rojo mappings from {rojo_file} ({len(rojo_mappings)} paths)",
 			  file=sys.stderr)
-		for k, v in rojo_mappings.items():
-			print(f"  {k} → {v}", file=sys.stderr)
 	else:
 		print("[info] No Rojo project file found; using filesystem resolution only.",
 			  file=sys.stderr)
+
+	if args.project:
+		graph = build_full_project_graph(repo_root, rojo_mappings, args.exclude)
+		if args.fmt == "dot":
+			print(to_dot_full(graph))
+		elif args.fmt == "json":
+			print(json.dumps(graph, indent=2))
+		print_summary(graph)
+		sys.exit(0)
+
+	# Single-file mode
+	entry = Path(args.entry)
+	if not entry.is_file():
+		print(f"Error: '{entry}' is not a file.", file=sys.stderr)
+		sys.exit(1)
 
 	graph = build_graph(entry, repo_root, rojo_mappings, args.depth, not args.no_recurse)
 	print(to_dot(graph) if args.fmt == "dot" else json.dumps(graph, indent=2))
