@@ -16,3 +16,7 @@ temp*
 
 # IntelliJ stuff
 .idea
+
+# Graph stuff
+
+.dot
