@@ -3,8 +3,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ClientBoundDialogueConceptsPayload = require(ReplicatedStorage.shared.network.payloads.ClientBoundDialogueConceptsPayload)
-local DisguiseConfig = require(ServerScriptService.server.disguise.DisguiseConfig)
-local EnforceClass = require(ServerScriptService.server.disguise.EnforceClass)
+local DisguiseConfig = require(ServerScriptService.server.world.stealth.disguise.DisguiseConfig)
+local EnforceClass = require(ServerScriptService.server.world.stealth.disguise.EnforceClass)
 local CellConfig = require(ServerScriptService.server.world.level.cell.CellConfig)
 
 local UNLOCALIZED_STRING = "UNLOCALIZED_STRING"
