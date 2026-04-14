@@ -7,6 +7,7 @@ local Maid = require(ReplicatedStorage.shared.util.misc.Maid)
 local Entity = require(ServerScriptService.server.world.entity.Entity)
 local Brain = require(ServerScriptService.server.world.entity.ai.Brain)
 local BodyRotationControl = require(ServerScriptService.server.world.entity.ai.control.BodyRotationControl)
+local FaceControl = require(ServerScriptService.server.world.entity.ai.control.FaceControl)
 local MoveControl = require(ServerScriptService.server.world.entity.ai.control.MoveControl)
 local RagdollControl = require(ServerScriptService.server.world.entity.ai.control.RagdollControl)
 local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.memory.MemoryModuleTypes)
@@ -52,6 +53,8 @@ function AbstractNpc.new(scene, character: Model & { Humanoid: Humanoid, Humanoi
 		}
 	})
 	self.bodyRotationControl = BodyRotationControl.new(character, self.pathNavigation)
+	self.faceControl = FaceControl.new(character)
+	self.faceControl:setFace("Neutral")
 	self.typeId = "npc"
 	self.humanoid = (character :: any).Humanoid :: Humanoid
 	self.random = Random.new()
@@ -233,6 +236,10 @@ end
 
 function AbstractNpc.getNavigation(self): PathNavigation.PathNavigation
 	return self.pathNavigation
+end
+
+function AbstractNpc.getFaceControl(self): FaceControl.FaceControl
+	return self.faceControl
 end
 
 --
