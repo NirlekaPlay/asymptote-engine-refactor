@@ -100,6 +100,28 @@ function AbstractNpc.new(scene, character: Model & { Humanoid: Humanoid, Humanoi
 
 	self._maid:giveTask(descendantAddedConnection)
 
+	self._maid:giveTask(humanoid.Running:Connect(function(speed: number)
+		self._animParams.speed = speed
+		self._animParams.isPathfinding = speed > 0
+	end))
+
+	self._maid:giveTask(humanoid.Jumping:Connect(function()
+		self._animParams.isJumping = true
+	end))
+
+	self._maid:giveTask(humanoid.FreeFalling:Connect(function()
+		self._animParams.isFalling = true
+		self._animParams.isJumping = false
+	end))
+
+	self._maid:giveTask(humanoid.StateChanged:Connect(function(_, new: Enum.HumanoidStateType)
+		if new == Enum.HumanoidStateType.Landed
+		or new == Enum.HumanoidStateType.Running then
+			self._animParams.isJumping = false
+			self._animParams.isFalling = false
+		end
+	end))
+
 	return self
 end
 

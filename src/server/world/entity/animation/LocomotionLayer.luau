@@ -65,6 +65,8 @@ function LocomotionLayer.update(self: LocomotionLayer, params: LocomotionParams,
 		targetState = "fall"
 	elseif params.isPathfinding then
 		targetState = if params.isRunning then "run" else "walk"
+		-- Arbirtary numbers. Where the hell did I get them? I don't fucking know.
+		self._player:adjustSpeed(params.speed / if params.isRunning then 24 else 14.5)
 	else
 		targetState = "idle"
 	end

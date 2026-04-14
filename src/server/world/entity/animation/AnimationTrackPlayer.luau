@@ -66,4 +66,10 @@ function AnimationTrackPlayer.getCurrentName(self: AnimationTrackPlayer): string
 	return self._currentName
 end
 
+function AnimationTrackPlayer.adjustSpeed(self: AnimationTrackPlayer, speed: number)
+	if self._current then
+		self._current:AdjustSpeed(speed)
+	end
+end
+
 return AnimationTrackPlayer
