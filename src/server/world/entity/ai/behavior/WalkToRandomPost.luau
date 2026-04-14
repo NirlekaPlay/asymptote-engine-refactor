@@ -219,7 +219,7 @@ function WalkToRandomPost.isAtTargetPost(agent: Agent, targetPost: Node.Node?): 
 end
 
 function WalkToRandomPost.setGuardAnimation(agent: Agent, guardAnim: boolean): ()
-	(agent :: any).character.isGuarding.Value = guardAnim
+	agent:getOverlayState().isGuarding = guardAnim
 end
 
 function WalkToRandomPost.getRandomUnoccupiedPost(self: WalkToRandomPost, agent: Agent, currentPost: Node.Node?): Node.Node?

@@ -11,6 +11,7 @@ local MoveControl = require(ServerScriptService.server.world.entity.ai.control.M
 local RagdollControl = require(ServerScriptService.server.world.entity.ai.control.RagdollControl)
 local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.memory.MemoryModuleTypes)
 local PathNavigation = require(ServerScriptService.server.world.entity.ai.navigation.PathNavigation)
+local HumanoidAnimator = require(ServerScriptService.server.world.entity.animation.HumanoidAnimator)
 local TestNpcAi = require(ServerScriptService.server.world.entity.npc.TestNpcAi)
 local EntityInLevelCallback = require(ServerScriptService.server.world.level.entity.EntityInLevelCallback)
 local Scene = require(ServerScriptService.server.world.level.scene.Scene)
@@ -56,6 +57,22 @@ function AbstractNpc.new(scene, character: Model & { Humanoid: Humanoid, Humanoi
 	self.random = Random.new()
 	self._maid = Maid.new()
 
+	-- Animations
+
+	self._animParams = {
+		isPathfinding = false,
+		isRunning = false,
+		isJumping = false,
+		isFalling = false,
+		speed = 0,
+	}
+	self._overlayState = {
+		isGuarding = false,
+		isReporting = false,
+		isStunned = false,
+	}
+	self._animator = HumanoidAnimator.new(humanoid)
+
 	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 
 	for _, part in character:GetDescendants() do
@@ -94,6 +111,10 @@ function AbstractNpc.update(self, deltaTime: number): ()
 	TestNpcAi.updateActivity(self)
 	self.brain:update(deltaTime)
 	self:sendDebugPackets()
+	debug.profileend()
+	debug.profilebegin("animator")
+	print(self._overlayState)
+	self._animator:update(self._animParams, self._overlayState)
 	debug.profileend()
 	debug.profileend()
 end
@@ -180,6 +201,16 @@ function AbstractNpc.getBlockPosition(self): Vector3
 		math.round(currentPos.Y - 2),
 		math.round(currentPos.Z)
 	)
+end
+
+--
+
+function AbstractNpc.getOverlayState(self): HumanoidAnimator.OverlayState
+	return self._overlayState
+end
+
+function AbstractNpc.getAnimParams(self): HumanoidAnimator.AnimationParams
+	return self._animParams
 end
 
 --

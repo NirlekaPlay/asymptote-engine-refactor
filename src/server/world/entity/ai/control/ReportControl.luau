@@ -5,7 +5,6 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local TalkControl = require(script.Parent.TalkControl)
 local ReportType = require(ReplicatedStorage.shared.world.stealth.report.ReportType)
 local Agent = require(ServerScriptService.server.world.entity.npc.Agent)
-local ServerLevel = require(ServerScriptService.server.world.level.ServerLevel)
 local Mission = require(ServerScriptService.server.world.level.mission.Mission)
 
 local RADIO_TOOL = ReplicatedStorage.shared.assets.items.NpcRadioNonFunc
@@ -65,7 +64,7 @@ function ReportControl.reportOn(
 		reportTimer = 0,
 		unequipRadioDelay = 0
 	}
-	(self :: any).agent.character.isReporting.Value = true
+	self.agent:getOverlayState().isReporting = true
 	self:equipRadio()
 end
 
@@ -80,13 +79,13 @@ function ReportControl.reportWithCustomDur(
 		reportTimer = 0,
 		unequipRadioDelay = unequipDur or 0
 	}
-	(self :: any).agent.character.isReporting.Value = true
+	self.agent:getOverlayState().isReporting = true
 	self:equipRadio()
 end
 
 function ReportControl.interruptReport(self: ReportControl): ()
 	self.reportingOn = nil
-	(self :: any).agent.character.isReporting.Value = false
+	self.agent:getOverlayState().isReporting = false
 	self:unequipRadio()
 end
 
