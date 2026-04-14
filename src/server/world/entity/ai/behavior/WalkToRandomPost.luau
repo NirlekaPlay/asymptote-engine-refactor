@@ -5,7 +5,6 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local Vec3 = require(ReplicatedStorage.shared.util.vector.Vec3)
 local Agent = require(ServerScriptService.server.world.entity.npc.Agent)
-local DetectionAgent = require(ServerScriptService.server.DetectionAgent)
 local PatrolState = require(ServerScriptService.server.world.entity.ai.behavior.patrol.PatrolState)
 local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.memory.MemoryModuleTypes)
 local MemoryStatus = require(ServerScriptService.server.world.entity.ai.memory.MemoryStatus)
@@ -35,7 +34,7 @@ export type WalkToRandomPost = typeof(setmetatable({} :: {
 
 type MemoryModuleType<T> = MemoryModuleTypes.MemoryModuleType<T>
 type MemoryStatus = MemoryStatus.MemoryStatus
-type Agent = Agent.Agent & DetectionAgent.DetectionAgent
+type Agent = Agent.Agent
 
 function WalkToRandomPost.new(): WalkToRandomPost
 	return setmetatable({

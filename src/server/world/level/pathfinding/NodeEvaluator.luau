@@ -1,10 +1,5 @@
 --!strict
 
-local CollectionService = game:GetService("CollectionService")
-local ServerScriptService = game:GetService("ServerScriptService")
-local CollectionTags = require(ServerScriptService.server.collection.CollectionTags)
-local Door = require(ServerScriptService.server.world.level.clutter.props.Door)
-
 --[=[
 	@class NodeEvaluator
 ]=]
@@ -25,14 +20,16 @@ function NodeEvaluator.isWaypointDoor(self: NodeEvaluator, waypoint: PathWaypoin
 end
 
 function NodeEvaluator.getDoorBoundPartsAt(self: NodeEvaluator, atPos: Vector3): {BasePart}
-	local overlapParams = OverlapParams.new()
+	--[[local overlapParams = OverlapParams.new()
 	overlapParams.FilterType = Enum.RaycastFilterType.Include
 	overlapParams.FilterDescendantsInstances = CollectionService:GetTagged(CollectionTags.DOOR_PATH_BOUNDS)
-	return workspace:GetPartBoundsInRadius(atPos, 5, overlapParams)
+	return workspace:GetPartBoundsInRadius(atPos, 5, overlapParams)]]
+
+	return {} -- TODO: Implement the door getting logic or dedicate this responsibility elsewhere
 end
 
 function NodeEvaluator.getDoorOnPathSegment(self: NodeEvaluator, fromPos: Vector3, toPos: Vector3): Door.Door?
-	local parts = self:getDoorBoundPartsAt(toPos)
+	--[[local parts = self:getDoorBoundPartsAt(toPos)
 	local dir = (toPos - fromPos)
 	local length = dir.Magnitude
 	local unitDir = dir / length
@@ -44,7 +41,7 @@ function NodeEvaluator.getDoorOnPathSegment(self: NodeEvaluator, fromPos: Vector
 	local result = workspace:Raycast(fromPos, unitDir * length, raycastParams)
 	if result then
 		return DoorRegistry.getDoorFromPart(result.Instance)
-	end
+	end]]
 	return nil
 end
 

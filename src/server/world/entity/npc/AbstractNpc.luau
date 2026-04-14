@@ -6,8 +6,11 @@ local DebugPackets = require(ReplicatedStorage.shared.network.DebugPackets)
 local Maid = require(ReplicatedStorage.shared.util.misc.Maid)
 local Entity = require(ServerScriptService.server.world.entity.Entity)
 local Brain = require(ServerScriptService.server.world.entity.ai.Brain)
+local BodyRotationControl = require(ServerScriptService.server.world.entity.ai.control.BodyRotationControl)
+local MoveControl = require(ServerScriptService.server.world.entity.ai.control.MoveControl)
 local RagdollControl = require(ServerScriptService.server.world.entity.ai.control.RagdollControl)
 local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.memory.MemoryModuleTypes)
+local PathNavigation = require(ServerScriptService.server.world.entity.ai.navigation.PathNavigation)
 local TestNpcAi = require(ServerScriptService.server.world.entity.npc.TestNpcAi)
 local EntityInLevelCallback = require(ServerScriptService.server.world.level.entity.EntityInLevelCallback)
 local Scene = require(ServerScriptService.server.world.level.scene.Scene)
@@ -25,8 +28,10 @@ AbstractNpc.__index = AbstractNpc
 
 type Brain = Brain.Brain<any>
 
-function AbstractNpc.new(scene, character: Model)
+function AbstractNpc.new(scene, character: Model & { Humanoid: Humanoid, HumanoidRootPart: BasePart })
 	local self = setmetatable({}, AbstractNpc)
+
+	local humanoid = character.Humanoid
 
 	self.uuid = "UNSET"
 	self.scene = scene
@@ -34,9 +39,24 @@ function AbstractNpc.new(scene, character: Model)
 	self.primaryPart = character.PrimaryPart :: BasePart
 	self.levelCallback = EntityInLevelCallback.NULL
 	self.brain = TestNpcAi.makeBrain(self :: any)
+	self.moveControl = MoveControl.new(humanoid)
+	self.pathNavigation = PathNavigation.new(character, self.moveControl, {
+		AgentRadius = 2,
+		AgentHeight = 4,
+		AgentCanJump = false,
+		WaypointSpacing = 1,
+		Costs = {
+			Door = 0.1,
+			DoorPerpendicularPart = 25
+		}
+	})
+	self.bodyRotationControl = BodyRotationControl.new(character, self.pathNavigation)
 	self.typeId = "npc"
 	self.humanoid = (character :: any).Humanoid :: Humanoid
+	self.random = Random.new()
 	self._maid = Maid.new()
+
+	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 
 	for _, part in character:GetDescendants() do
 		if part:IsA("BasePart") then
@@ -56,6 +76,10 @@ function AbstractNpc.new(scene, character: Model)
 			inst.CollisionGroup = CollisionGroupTypes.NON_COLLIDE_WITH_PLAYER
 		end
 	end)
+
+	self._maid:giveTask(character.HumanoidRootPart:GetPropertyChangedSignal("Position"):Connect(function()
+		self.levelCallback:onMove()
+	end))
 
 	self._maid:giveTask(descendantAddedConnection)
 
@@ -139,6 +163,23 @@ end
 
 function AbstractNpc.getHumanoid(self): Humanoid
 	return self.humanoid
+end
+
+function AbstractNpc.getBodyRotationControl(self): BodyRotationControl.BodyRotationControl
+	return self.bodyRotationControl
+end
+
+function AbstractNpc.getRandom(self): Random
+	return self.random
+end
+
+function AbstractNpc.getBlockPosition(self): Vector3
+	local currentPos = self.character.HumanoidRootPart.Position :: Vector3
+	return Vector3.new(
+		math.round(currentPos.X),
+		math.round(currentPos.Y - 2),
+		math.round(currentPos.Z)
+	)
 end
 
 --
