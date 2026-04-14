@@ -5,6 +5,7 @@ local Brain = require(ServerScriptService.server.world.entity.ai.Brain)
 local Activity = require(ServerScriptService.server.world.entity.ai.behavior.Activity)
 local BehaviorWrapper = require(ServerScriptService.server.world.entity.ai.behavior.BehaviorWrapper)
 local WalkToRandomPost = require(ServerScriptService.server.world.entity.ai.behavior.WalkToRandomPost)
+local WalkToTargetSink = require(ServerScriptService.server.world.entity.ai.behavior.WalkToTargetSink)
 local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.memory.MemoryModuleTypes)
 local MemoryStatus = require(ServerScriptService.server.world.entity.ai.memory.MemoryStatus)
 local SensorFactories = require(ServerScriptService.server.world.entity.ai.sensing.SensorFactories)
@@ -65,7 +66,9 @@ function TestNpcAi.makeBrain(agent: Agent)
 end
 
 function TestNpcAi.initCoreActivity(brain: Brain<Agent>): ()
-	brain:addActivity(Activity.CORE, 2, {})
+	brain:addActivity(Activity.CORE, 2, {
+		BehaviorWrapper.new(WalkToTargetSink.new())
+	})
 end
 
 function TestNpcAi.initWorkActivity(brain: Brain<Agent>): ()

@@ -107,15 +107,21 @@ end
 
 function AbstractNpc.update(self, deltaTime: number): ()
 	debug.profilebegin("Npc.update")
+
 	debug.profilebegin("brain")
 	TestNpcAi.updateActivity(self)
 	self.brain:update(deltaTime)
 	self:sendDebugPackets()
 	debug.profileend()
+
 	debug.profilebegin("animator")
-	print(self._overlayState)
 	self._animator:update(self._animParams, self._overlayState)
 	debug.profileend()
+
+	debug.profilebegin("controls")
+	self.bodyRotationControl:update(deltaTime)
+	debug.profileend()
+
 	debug.profileend()
 end
 
@@ -201,6 +207,10 @@ function AbstractNpc.getBlockPosition(self): Vector3
 		math.round(currentPos.Y - 2),
 		math.round(currentPos.Z)
 	)
+end
+
+function AbstractNpc.getNavigation(self): PathNavigation.PathNavigation
+	return self.pathNavigation
 end
 
 --

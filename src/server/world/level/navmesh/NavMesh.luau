@@ -10,7 +10,7 @@ local NavMesh = {}
 NavMesh.__index = NavMesh
 
 export type NavMesh = typeof(setmetatable({} :: {
-	registry: {[string]: Node.Node},
+	registry: {[Instance]: Node.Node},
 	groups: {[string]: {Node.Node}}
 }, NavMesh))
 
@@ -33,37 +33,32 @@ function NavMesh.setPostsFromFolder(self: NavMesh, nodesFolder: Folder): ()
 	table.clear(self.registry)
 	table.clear(self.groups)
 
-	local function registerFolder(folder: Folder, folderName: string): {Node.Node}
-		local collected: {Node.Node} = {}
+	local stack: {{folder: Folder, groupName: string}} = {{folder = nodesFolder, groupName = nodesFolder.Name}}
+	local top = 1
+
+	while top > 0 do
+		local entry = stack[top]
+		top -= 1
+
+		local folder = entry.folder
+		local groupName = entry.groupName
+
+		if not self.groups[groupName] then
+			self.groups[groupName] = {}
+		end
 
 		for _, child in folder:GetChildren() do
 			if child:IsA("BasePart") then
-				local id = child:GetFullName()
-				if not self.registry[id] then
-					self.registry[id] = Node.new(child.CFrame)
+				if not self.registry[child] then
+					self.registry[child] = Node.new(child.CFrame)
 				end
-				table.insert(collected, self.registry[id])
-
+				table.insert(self.groups[groupName], self.registry[child])
 			elseif child:IsA("Folder") then
-				local childNodes = registerFolder(child, child.Name)
-				for _, node in childNodes do
-					table.insert(collected, node)
-				end
+				top += 1
+				stack[top] = {folder = child, groupName = child.Name}
 			end
 		end
-
-		if not self.groups[folderName] then
-			self.groups[folderName] = {}
-		end
-
-		for _, node in collected do
-			table.insert(self.groups[folderName], node)
-		end
-
-		return collected
 	end
-
-	registerFolder(nodesFolder, nodesFolder.Name)
 end
 
 return NavMesh
