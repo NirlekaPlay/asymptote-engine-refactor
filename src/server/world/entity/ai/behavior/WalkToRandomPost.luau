@@ -10,7 +10,7 @@ local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.mem
 local MemoryStatus = require(ServerScriptService.server.world.entity.ai.memory.MemoryStatus)
 local Optional = require(ServerScriptService.server.world.entity.ai.memory.Optional)
 local WalkTarget = require(ServerScriptService.server.world.entity.ai.memory.WalkTarget)
-local Node = require(ServerScriptService.server.world.entity.ai.navigation.Node)
+local Node = require(ServerScriptService.server.world.level.navmesh.Node)
 
 local MIN_RANDOM_WAIT_TIME = 16
 local MAX_RANDOM_WAIT_TIME = 24

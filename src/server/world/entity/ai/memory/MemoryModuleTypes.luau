@@ -4,7 +4,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local PatrolState = require(ServerScriptService.server.world.entity.ai.behavior.patrol.PatrolState)
 local PrioritizedEntity = require(ServerScriptService.server.world.entity.ai.memory.PrioritizedEntity)
 local WalkTarget = require(ServerScriptService.server.world.entity.ai.memory.WalkTarget)
-local Node = require(ServerScriptService.server.world.entity.ai.navigation.Node)
+local Node = require(ServerScriptService.server.world.level.navmesh.Node)
 local NodePath = require(ServerScriptService.server.world.level.pathfinding.NodePath)
 
 --[=[

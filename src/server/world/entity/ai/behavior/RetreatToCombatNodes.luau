@@ -7,7 +7,7 @@ local DetectionAgent = require(ServerScriptService.server.DetectionAgent)
 local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.memory.MemoryModuleTypes)
 local MemoryStatus = require(ServerScriptService.server.world.entity.ai.memory.MemoryStatus)
 local WalkTarget = require(ServerScriptService.server.world.entity.ai.memory.WalkTarget)
-local Node = require(ServerScriptService.server.world.entity.ai.navigation.Node)
+local Node = require(ServerScriptService.server.world.level.navmesh.Node)
 
 --[=[
 	@class RetreatToCombatNodes
