@@ -8,6 +8,7 @@ local EntityTickList = require(ServerScriptService.server.world.level.entity.Ent
 local LevelCallback = require(ServerScriptService.server.world.level.entity.LevelCallback)
 local NavMesh = require(ServerScriptService.server.world.level.navmesh.NavMesh)
 local PropManager = require(ServerScriptService.server.world.level.scene.props.PropManager)
+local StateController = require(ServerScriptService.server.world.level.states.StateController)
 
 --[=[
 	@class Scene
@@ -19,6 +20,7 @@ export type Scene = typeof(setmetatable({} :: {
 	cellManager: CellManager.CellManager,
 	propManager: PropManager.PropManager,
 	entityManager: EntitySectionManager.EntitySectionManager,
+	stateController: StateController.StateController,
 	entityTickList: EntityTickList.EntityTickList,
 	navMesh: NavMesh.NavMesh,
 	--
@@ -32,6 +34,7 @@ function Scene.new(cells, missionSetup): Scene
 	local this = setmetatable({
 		cellManager = CellManager.new(cells, missionSetup.cells),
 		propManager = PropManager.new(),
+		stateController = StateController.new(),
 		entityTickList = EntityTickList.new(),
 		navMesh = NavMesh.new(),
 		random = Random.new()
@@ -77,8 +80,19 @@ end
 
 --
 
+function Scene.evaluateExpression(self: Scene, str: string): any
+	return self.stateController:evaluateExpression(str)
+end
+
+function Scene.setState(self: Scene, key: string, value: any): ()
+	self.stateController:setState(key, value)
+end
+
+--
+
 function Scene.update(self: Scene, deltaTime: number): ()
 	debug.profilebegin("Scene.update")
+
 	debug.profilebegin("entities")
 	self.entityTickList:forEach(function(entity)
 		if entity:isRemoved() then
@@ -88,6 +102,19 @@ function Scene.update(self: Scene, deltaTime: number): ()
 		entity:update(deltaTime)
 	end)
 	debug.profileend()
+
+	debug.profilebegin("props")
+
+	self.propManager:update(deltaTime, self :: any)
+
+	debug.profileend()
+
+	debug.profilebegin("states")
+
+	self.stateController:tick()
+
+	debug.profileend()
+
 	debug.profileend()
 end
 

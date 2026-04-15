@@ -3,6 +3,7 @@
 local ServerScriptService = game:GetService("ServerScriptService")
 local PropHandler = require(ServerScriptService.server.world.level.props.registry.PropHandler)
 local PropHandlerBuilder = require(ServerScriptService.server.world.level.props.registry.PropHandlerBuilder)
+local TriggerZone = require(ServerScriptService.server.world.level.props.triggers.TriggerZone)
 
 --[=[
 	@class PropRegistry
@@ -42,6 +43,8 @@ function PropRegistry.register(): ()
 		end)
 		:build()
 	)
+
+	register("TriggerZone", TriggerZone.handler())
 end
 
 PropRegistry.register()

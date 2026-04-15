@@ -2,6 +2,7 @@
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local Prop = require(ServerScriptService.server.world.level.props.Prop)
+local PropSceneAccessor = require(ServerScriptService.server.world.level.scene.props.PropSceneAccessor)
 
 local DEFAULT_UPDATES_PER_SEC = 1 / 20
 
@@ -58,7 +59,7 @@ end
 
 --
 
-function PropManager.update(self: PropManager, deltaTime: number): ()
+function PropManager.update(self: PropManager, deltaTime: number, scene: PropSceneAccessor.PropSceneAccessor): ()
 	debug.profilebegin("update_props")
 
 	for _, prop in self.props do
@@ -71,7 +72,7 @@ function PropManager.update(self: PropManager, deltaTime: number): ()
 		prop._elapsed = (prop._elapsed or 0) + deltaTime
 
 		if prop._elapsed >= ups then
-			prop:update(prop._elapsed)
+			prop:update(prop._elapsed, scene)
 			prop._elapsed = 0
 		end
 	end

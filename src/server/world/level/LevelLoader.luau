@@ -24,6 +24,7 @@ function LevelLoader.loadFromFolder(folder: Folder): Scene.Scene
 	local cells = LevelLoader.createCellsFromFolder(cellsConfigs, cellsFolder)
 
 	local newScene = Scene.new(cells, missionSetupObj)
+	newScene.stateController:setDerivedStates(missionSetupObj.globalsExpressionStrs)
 
 	local propsFolder = folder:FindFirstChild("Props")
 	if propsFolder and propsFolder:IsA("Folder") then

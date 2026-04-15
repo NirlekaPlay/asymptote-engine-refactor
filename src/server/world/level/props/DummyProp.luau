@@ -2,6 +2,7 @@
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local Prop = require(ServerScriptService.server.world.level.props.Prop)
+local PropSceneAccessor = require(ServerScriptService.server.world.level.scene.props.PropSceneAccessor)
 
 --[=[
 	@class DummyProp
@@ -17,6 +18,8 @@ type Self = Prop.Fields & {
 
 export type DummyProp = Prop.Prop & typeof(setmetatable({} :: Self, DummyProp))
 
+type PropSceneAccessor = PropSceneAccessor.PropSceneAccessor
+
 function DummyProp.new(id: number): DummyProp
 	local self: Self = {
 		id = id,
@@ -29,7 +32,7 @@ end
 
 --
 
-function DummyProp.update(self: DummyProp, deltaTime: number): ()
+function DummyProp.update(self: DummyProp, deltaTime: number, scene: PropSceneAccessor): ()
 	return
 end
 
