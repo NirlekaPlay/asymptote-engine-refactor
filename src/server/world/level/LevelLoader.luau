@@ -59,8 +59,10 @@ function LevelLoader.loadFromFolder(folder: Folder): Scene.Scene
 			for _, child in folder:GetChildren() do
 				if child:IsA("BoolValue") then
 					initNpc(child)
+				elseif child:IsA("Folder") then
+					parseNpcs(child)
 				else
-					parseNpcs(folder)
+					continue
 				end
 			end
 		end
