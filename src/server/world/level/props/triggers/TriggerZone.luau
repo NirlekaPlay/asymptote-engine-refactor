@@ -50,6 +50,8 @@ function TriggerZone.handler()
 
 			TriggerZone.makePartStatic(placeholder)
 
+			scene:setState(targetVariableName, 0)
+
 			return true, TriggerZone.new(0, placeholder, expressionStr, targetVariableName)
 		end)
 		:build()
