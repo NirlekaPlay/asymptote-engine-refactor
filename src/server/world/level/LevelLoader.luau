@@ -7,6 +7,7 @@ local MissionSetupReader = require(ServerScriptService.server.world.level.missio
 local PropRegistry = require(ServerScriptService.server.world.level.props.registry.PropRegistry)
 local Scene = require(ServerScriptService.server.world.level.scene.Scene)
 local Clutter = require(ServerScriptService.server.world.level.scene.props.Clutter)
+local LightingSetter = require(ServerScriptService.server.world.lighting.LightingSetter)
 
 --[=[
 	@class LevelLoader
@@ -22,6 +23,10 @@ function LevelLoader.loadFromFolder(folder: Folder): Scene.Scene
 	end
 
 	local cells = LevelLoader.createCellsFromFolder(cellsConfigs, cellsFolder)
+
+	if missionSetupObj.lightingSettings then
+		LightingSetter.readConfig(missionSetupObj.lightingSettings)
+	end
 
 	local newScene = Scene.new(cells, missionSetupObj)
 	newScene.stateController:setDerivedStates(missionSetupObj.globalsExpressionStrs)
