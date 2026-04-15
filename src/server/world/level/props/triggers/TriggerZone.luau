@@ -9,7 +9,7 @@ local PropSceneAccessor = require(ServerScriptService.server.world.level.scene.p
 --[=[
 	@class TriggerZone
 
-	Provides you the boilerplate for functional props.
+	Sets a state to the number of players in a zone.
 ]=]
 local TriggerZone = {}
 TriggerZone.__index = TriggerZone
