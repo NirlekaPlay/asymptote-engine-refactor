@@ -7,6 +7,7 @@ local EntitySectionManager = require(ServerScriptService.server.world.level.enti
 local EntityTickList = require(ServerScriptService.server.world.level.entity.EntityTickList)
 local LevelCallback = require(ServerScriptService.server.world.level.entity.LevelCallback)
 local NavMesh = require(ServerScriptService.server.world.level.navmesh.NavMesh)
+local StateComponentManager = require(ServerScriptService.server.world.level.scene.components.registry.StateComponentManager)
 local PropManager = require(ServerScriptService.server.world.level.scene.props.PropManager)
 local StateController = require(ServerScriptService.server.world.level.states.StateController)
 
@@ -20,6 +21,7 @@ export type Scene = typeof(setmetatable({} :: {
 	cellManager: CellManager.CellManager,
 	propManager: PropManager.PropManager,
 	entityManager: EntitySectionManager.EntitySectionManager,
+	componentManager: StateComponentManager.StateComponentManager,
 	stateController: StateController.StateController,
 	entityTickList: EntityTickList.EntityTickList,
 	navMesh: NavMesh.NavMesh,
@@ -58,6 +60,7 @@ function Scene.new(cells, missionSetup): Scene
 	end
 
 	this.entityManager = EntitySectionManager.new(Callback)
+	this.componentManager = StateComponentManager.new(this :: any)
 
 	return this
 end
@@ -84,14 +87,28 @@ function Scene.evaluateExpression(self: Scene, str: string): any
 	return self.stateController:evaluateExpression(str)
 end
 
+function Scene.getState(self: Scene, state: string): any
+	return self:getState(state)
+end
+
 function Scene.setState(self: Scene, key: string, value: any): ()
 	self.stateController:setState(key, value)
+end
+
+function Scene.hasState(self: Scene, state: string): boolean
+	return self.stateController:hasState(state)
 end
 
 --
 
 function Scene.update(self: Scene, deltaTime: number): ()
 	debug.profilebegin("Scene.update")
+
+	debug.profilebegin("components")
+
+	self.componentManager:update(deltaTime)
+
+	debug.profileend()
 
 	debug.profilebegin("entities")
 	self.entityTickList:forEach(function(entity)

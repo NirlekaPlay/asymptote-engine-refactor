@@ -6,6 +6,7 @@ local Cell = require(ServerScriptService.server.world.level.cell.Cell)
 local MissionSetupReader = require(ServerScriptService.server.world.level.mission.reading.MissionSetupReader)
 local PropRegistry = require(ServerScriptService.server.world.level.props.registry.PropRegistry)
 local Scene = require(ServerScriptService.server.world.level.scene.Scene)
+local StateComponentRegistry = require(ServerScriptService.server.world.level.scene.components.registry.StateComponentRegistry)
 local Clutter = require(ServerScriptService.server.world.level.scene.props.Clutter)
 local LightingSetter = require(ServerScriptService.server.world.lighting.LightingSetter)
 
@@ -30,6 +31,11 @@ function LevelLoader.loadFromFolder(folder: Folder): Scene.Scene
 
 	local newScene = Scene.new(cells, missionSetupObj)
 	newScene.stateController:setDerivedStates(missionSetupObj.globalsExpressionStrs)
+
+	local stateComponentsFolder = folder:FindFirstChild("StateComponents")
+	if stateComponentsFolder and stateComponentsFolder:IsA("Folder") then
+		LevelLoader.initializeStateComponents(stateComponentsFolder, newScene)
+	end
 
 	local propsFolder = folder:FindFirstChild("Props")
 	if propsFolder and propsFolder:IsA("Folder") then
@@ -79,6 +85,32 @@ function LevelLoader.getAndParseMissionSetupModule(sceneFolder: Folder)
 		error("Unable to initialize Mission: MissionSetup module not found in Level folder or is not a ModuleScript.")
 	else
 		return MissionSetupReader.read(missionSetupModule)
+	end
+end
+
+function LevelLoader.initializeStateComponents(stateComponentsFolder: Folder, scene: Scene.Scene): ()
+	local stack = {stateComponentsFolder}
+	local index = 1
+
+	while index > 0 do
+		local current = stack[index]
+		stack[index] = nil
+		index = index - 1
+
+		if current:IsA("BoolValue") then
+			local component = StateComponentRegistry.createFromInstance(current)
+			if component then
+				scene.componentManager:addComponent(component)
+			end
+		end
+
+		if current:IsA("Folder") then
+			local children = current:GetChildren()
+			for i = #children, 1, -1 do
+				index = index + 1
+				stack[index] = children[i]
+			end
+		end
 	end
 end
 
