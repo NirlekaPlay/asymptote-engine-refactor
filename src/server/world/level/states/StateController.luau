@@ -40,14 +40,22 @@ export type StateController = typeof(setmetatable({} :: {
 	pendingRawSets: { [string]: any },
 	isTicking: boolean,
 	dirtyDerived: { [string]: true },
+	watchersByVar: { [string]: { [ExpressionWatcher]: boolean } },
 	context: ExpressionContext.ExpressionContext
 }, StateController))
-
 
 export type DerivedEntry = {
 	parsed: ASTNode.ASTNode,
 	usedVariables: { [string]: true },
 	isDirty: boolean,
+}
+
+export type ExpressionWatcher = {
+	expression: string,
+	parsed: ASTNode.ASTNode?,
+	usedVariables: { [string]: true },
+	callback: (newValue: any) -> (),
+	lastValue: any,
 }
 
 function StateController.new(): StateController
@@ -60,7 +68,8 @@ function StateController.new(): StateController
 
 		pendingRawSets = {},
 		isTicking = false,
-		dirtyDerived = {}
+		dirtyDerived = {},
+		watchersByVar = {}
 	}
 
 	-- Metatable black magic to merge both derived and set states for the context
@@ -84,7 +93,42 @@ end
 
 --
 
+function StateController.subscribeExpressionChange(self: StateController, expressionStr: string, callback: (any) -> ()): () -> ()
+	local parsed = ExpressionParser.fromString(expressionStr):parse()
+	local usedVars = if parsed then ExpressionParser.getVariablesSet(parsed) else {}
+	
+	local watcher: ExpressionWatcher = {
+		expression = expressionStr,
+		parsed = parsed,
+		usedVariables = usedVars,
+		callback = callback,
+		lastValue = self:evaluateExpression(expressionStr)
+	}
+
+	-- task.spawn(callback, watcher.lastValue) -- ???? Should we? Nahhh
+
+	for varName in usedVars do
+		if not self.watchersByVar[varName] then
+			self.watchersByVar[varName] = {}
+		end
+		self.watchersByVar[varName][watcher] = true
+	end
+
+	-- Unsubscribe function
+	return function()
+		for varName in usedVars do
+			if self.watchersByVar[varName] then
+				self.watchersByVar[varName][watcher] = nil
+			end
+		end
+	end
+end
+
+--
+
 function StateController.setDerivedStates(self: StateController, states: { [string]: string }): ()
+	table.clear(self.adjacency)
+
 	local adjacency: { [string]: { string } }  = {}
 	local entries: { string } = {}
 	local derivedNames: { [string]: boolean } = {}
@@ -95,12 +139,12 @@ function StateController.setDerivedStates(self: StateController, states: { [stri
 		derivedNames[varName] = true
 		adjacency[varName] = {}
 
-		local parsed   = ExpressionParser.fromString(varExpr):parse()
+		local parsed = ExpressionParser.fromString(varExpr):parse()
 		local usedVars = if parsed then ExpressionParser.getVariablesSet(parsed) else {}
 		expressions[varName] = { parsed = parsed, usedVariables = usedVars } :: any
 	end
 
-	-- gets an edge usedVar -> varName  ("varName depends on usedVar")
+	-- gets an edge usedVar -> varName ("varName depends on usedVar")
 	for varName, entry in expressions do
 		for usedVarName in entry.usedVariables do
 			if derivedNames[usedVarName] and usedVarName ~= varName then
@@ -134,7 +178,7 @@ function StateController.setDerivedStates(self: StateController, states: { [stri
 	end
 
 	self.derivedEntries = expressions
-	self.topoOrder      = topoOrder
+	self.topoOrder = topoOrder
 
 	-- Mark everything dirty so first tick initialises all derived values
 	for varName in expressions do
@@ -147,12 +191,13 @@ function StateController.evaluateExpression(self: StateController, str: string):
 end
 
 function StateController.setState(self: StateController, key: string, value: any)
-	if self.isTicking then
-		self.pendingRawSets[key] = value   -- deferred to next tick
+	--[[if self.isTicking then
+		self.pendingRawSets[key] = value -- deferred to next tick
 		return
 	end
 	self.rawStates[key] = value
-	self:markDependentsDirty(key)
+	self:markDependentsDirty(key)]]
+	self.pendingRawSets[key] = value
 end
 
 function StateController.getState(self: StateController, key: string): any
@@ -170,11 +215,10 @@ end
 function StateController.getOrElseSet<T>(self: StateController, key: string, default: T): T
 	if not self:hasState(key) and default ~= nil then
 		self:setState(key, default)
+		return default
 	else
 		return self:getState(key)
 	end
-
-	return nil
 end
 
 function StateController.markDependentsDirty(self: StateController, changedKey: string)
@@ -189,9 +233,20 @@ end
 function StateController.tick(self: StateController): ()
 	self.isTicking = true
 
+	local watchersToCheck = {} :: { [ExpressionWatcher]: boolean }
+
+	local function markWatchers(key: string)
+		if self.watchersByVar[key] then
+			for watcher in self.watchersByVar[key] do
+				watchersToCheck[watcher] = true
+			end
+		end
+	end
+
 	for key, value in self.pendingRawSets do
 		self.rawStates[key] = value
 		self:markDependentsDirty(key)
+		markWatchers(key)
 	end
 	table.clear(self.pendingRawSets)
 
@@ -206,9 +261,18 @@ function StateController.tick(self: StateController): ()
 			self.derivedStates[varName] = newVal
 			changed[varName] = newVal
 			self:markDependentsDirty(varName) -- cascade within same tick
+			markWatchers(varName)
 		end
 		
 		self.dirtyDerived[varName] = nil
+	end
+
+	for watcher in watchersToCheck do
+		local newVal = ExpressionParser.evaluate(watcher.parsed, self.context)
+		if newVal ~= watcher.lastValue then
+			watcher.lastValue = newVal
+			watcher.callback(newVal)
+		end
 	end
 
 	self.isTicking = false

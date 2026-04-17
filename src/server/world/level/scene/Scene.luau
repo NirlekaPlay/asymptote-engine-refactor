@@ -99,6 +99,10 @@ function Scene.hasState(self: Scene, state: string): boolean
 	return self.stateController:hasState(state)
 end
 
+function Scene.subscribeExpressionChange(self: Scene, expressionStr: string, callback: (any) -> ()): () -> ()
+	return self.stateController:subscribeExpressionChange(expressionStr, callback)
+end
+
 --
 
 function Scene.update(self: Scene, deltaTime: number): ()
