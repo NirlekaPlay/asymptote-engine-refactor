@@ -88,7 +88,7 @@ function Scene.evaluateExpression(self: Scene, str: string): any
 end
 
 function Scene.getState(self: Scene, state: string): any
-	return self:getState(state)
+	return self.stateController:getState(state)
 end
 
 function Scene.setState(self: Scene, key: string, value: any): ()
