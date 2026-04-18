@@ -38,10 +38,10 @@ function PropManager.getPropById(self: PropManager, id: number)
 	return self.props[id]
 end
 
-function PropManager.restartProps(self: PropManager): ()
+function PropManager.restartProps(self: PropManager, scene: PropSceneAccessor.PropSceneAccessor): ()
 	for _, prop in self.props do
 		if prop.restart then
-			prop:restart()
+			prop:restart(scene)
 		end
 	end
 end

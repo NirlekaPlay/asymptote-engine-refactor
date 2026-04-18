@@ -6,6 +6,7 @@ local CellManager = require(ServerScriptService.server.world.level.cell.CellMana
 local EntitySectionManager = require(ServerScriptService.server.world.level.entity.EntitySectionManager)
 local EntityTickList = require(ServerScriptService.server.world.level.entity.EntityTickList)
 local LevelCallback = require(ServerScriptService.server.world.level.entity.LevelCallback)
+local InteractionPromptBuilder = require(ServerScriptService.server.world.level.interaction.InteractionPromptBuilder)
 local MissionSetup = require(ServerScriptService.server.world.level.mission.reading.MissionSetup)
 local NavMesh = require(ServerScriptService.server.world.level.navmesh.NavMesh)
 local StateComponentManager = require(ServerScriptService.server.world.level.scene.components.registry.StateComponentManager)
@@ -108,6 +109,10 @@ end
 
 function Scene.getLocalizedStrings(self: Scene): { [string]: string }
 	return self.sceneConfigObj.localizedStrings
+end
+
+function Scene.promptBuilder(self: Scene): InteractionPromptBuilder.InteractionPromptBuilder
+	return InteractionPromptBuilder.new(self :: any)
 end
 
 --
