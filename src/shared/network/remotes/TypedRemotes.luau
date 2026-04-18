@@ -37,7 +37,7 @@ return {
 	ClientBoundReplicateIndividualGlobalStates = RE("ClientBoundReplicateGlobalStates") :: RE<string, any>,
 	ClientBoundReplicateAllGlobalStates = RE("ClientBoundReplicateAllGlobalStates") :: RE<{[string]:any}>,
 	--
-	ClientBoundLocalizationAppend = RE("ClientBoundLocalizationAppend") :: RE<{[string]:string}>,
+	ClientboundLocalizationAppend = RE("ClientboundLocalizationAppend") :: RE<{[string]:string}>,
 	--
 	ClientBoundCharacterAppearances = RE("ClientBoundCharacterAppearance") :: RE<{CharacterAppearancePayload.CharacterAppearancePayload}>,
 	--

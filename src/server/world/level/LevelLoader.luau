@@ -6,6 +6,7 @@ local Cell = require(ServerScriptService.server.world.level.cell.Cell)
 local MissionSetupReader = require(ServerScriptService.server.world.level.mission.reading.MissionSetupReader)
 local PropRegistry = require(ServerScriptService.server.world.level.props.registry.PropRegistry)
 local Scene = require(ServerScriptService.server.world.level.scene.Scene)
+local LocalizedStringsReplicatorComponent = require(ServerScriptService.server.world.level.scene.components.LocalizedStringsReplicatorComponent)
 local StateComponentRegistry = require(ServerScriptService.server.world.level.scene.components.registry.StateComponentRegistry)
 local Clutter = require(ServerScriptService.server.world.level.scene.props.Clutter)
 local LightingSetter = require(ServerScriptService.server.world.lighting.LightingSetter)
@@ -31,6 +32,8 @@ function LevelLoader.loadFromFolder(folder: Folder): Scene.Scene
 
 	local newScene = Scene.new(cells, missionSetupObj)
 	newScene.stateController:setDerivedStates(missionSetupObj.globalsExpressionStrs)
+
+	LevelLoader.setupDefaultComponents(newScene)
 
 	local stateComponentsFolder = folder:FindFirstChild("StateComponents")
 	if stateComponentsFolder and stateComponentsFolder:IsA("Folder") then
@@ -77,6 +80,10 @@ function LevelLoader.loadFromFolder(folder: Folder): Scene.Scene
 	end
 
 	return newScene
+end
+
+function LevelLoader.setupDefaultComponents(scene: Scene.Scene): ()
+	scene.componentManager:addComponent(LocalizedStringsReplicatorComponent.new())
 end
 
 function LevelLoader.getAndParseMissionSetupModule(sceneFolder: Folder)

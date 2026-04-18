@@ -6,6 +6,7 @@ local CellManager = require(ServerScriptService.server.world.level.cell.CellMana
 local EntitySectionManager = require(ServerScriptService.server.world.level.entity.EntitySectionManager)
 local EntityTickList = require(ServerScriptService.server.world.level.entity.EntityTickList)
 local LevelCallback = require(ServerScriptService.server.world.level.entity.LevelCallback)
+local MissionSetup = require(ServerScriptService.server.world.level.mission.reading.MissionSetup)
 local NavMesh = require(ServerScriptService.server.world.level.navmesh.NavMesh)
 local StateComponentManager = require(ServerScriptService.server.world.level.scene.components.registry.StateComponentManager)
 local PropManager = require(ServerScriptService.server.world.level.scene.props.PropManager)
@@ -25,6 +26,7 @@ export type Scene = typeof(setmetatable({} :: {
 	stateController: StateController.StateController,
 	entityTickList: EntityTickList.EntityTickList,
 	navMesh: NavMesh.NavMesh,
+	sceneConfigObj: MissionSetup.MissionSetup,
 	--
 	random: Random
 }, Scene))
@@ -32,13 +34,14 @@ export type Scene = typeof(setmetatable({} :: {
 type Entity = Entity.Entity
 type LevelCallback = LevelCallback.LevelCallback<Entity>
 
-function Scene.new(cells, missionSetup): Scene
+function Scene.new(cells, missionSetup: MissionSetup.MissionSetup): Scene
 	local this = setmetatable({
 		cellManager = CellManager.new(cells, missionSetup.cells),
 		propManager = PropManager.new(),
 		stateController = StateController.new(),
 		entityTickList = EntityTickList.new(),
 		navMesh = NavMesh.new(),
+		sceneConfigObj = missionSetup,
 		random = Random.new()
 	}, Scene)
 
@@ -101,6 +104,10 @@ end
 
 function Scene.subscribeExpressionChange(self: Scene, expressionStr: string, callback: (any) -> ()): () -> ()
 	return self.stateController:subscribeExpressionChange(expressionStr, callback)
+end
+
+function Scene.getLocalizedStrings(self: Scene): { [string]: string }
+	return self.sceneConfigObj.localizedStrings
 end
 
 --
