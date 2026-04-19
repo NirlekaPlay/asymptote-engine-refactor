@@ -120,6 +120,12 @@ end
 function Scene.update(self: Scene, deltaTime: number): ()
 	debug.profilebegin("Scene.update")
 
+	debug.profilebegin("states")
+
+	self.stateController:tick()
+
+	debug.profileend()
+
 	debug.profilebegin("components")
 
 	self.componentManager:update(deltaTime)
@@ -139,12 +145,6 @@ function Scene.update(self: Scene, deltaTime: number): ()
 	debug.profilebegin("props")
 
 	self.propManager:update(deltaTime, self :: any)
-
-	debug.profileend()
-
-	debug.profilebegin("states")
-
-	self.stateController:tick()
 
 	debug.profileend()
 
