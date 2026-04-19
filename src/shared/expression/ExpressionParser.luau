@@ -108,8 +108,21 @@ function ExpressionParser.evaluate(node: ASTNode?, context: ExpressionContext.Ex
 	elseif node.kind == "Binary" then
 		local left = ExpressionParser.evaluate(node.left, context)
 		local right = ExpressionParser.evaluate(node.right, context)
-		
+
 		local op = node.operator
+
+		if left == nil or right == nil then
+			if op == LESS_THAN_OPERATOR or
+				op == MORE_THAN_OPERATOR or
+				op == LESS_THAN_OET_OPERATOR or
+				op == MORE_THAN_OET_OPERATOR then
+
+				print(node.left)
+				print(node.right)
+				error(`Invalid binary operation: '{node.left}' (={left}) [{op}] '{node.right}' (={right})`)
+			end
+		end
+
 		if op == EQUALITY_OPERATOR then return left == right end
 		if op == AND_OPERATOR then return left and right end
 		if op == OR_OPERATOR then return left or right end
