@@ -155,7 +155,7 @@ function LevelLoader.initializeProps(propsFolder: Folder, missionSetupObj, newSc
 		if handler then
 			local success, returnedProp = handler:proccess(placeholder, prop, newScene)
 			if returnedProp then
-				newScene.propManager:addProp(returnedProp)
+				newScene.propManager:addProp(returnedProp, newScene)
 			end
 
 			if success then

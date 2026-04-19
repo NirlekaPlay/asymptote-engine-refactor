@@ -1,6 +1,9 @@
 --!strict
 
+local CollectionService = game:GetService("CollectionService")
 local ServerScriptService = game:GetService("ServerScriptService")
+local CollectionTags = require(ServerScriptService.server.world.collection.CollectionTags)
+local TraversableDoor = require(ServerScriptService.server.world.level.pathfinding.TraversableDoor)
 local Prop = require(ServerScriptService.server.world.level.props.Prop)
 local PropSceneAccessor = require(ServerScriptService.server.world.level.scene.props.PropSceneAccessor)
 
@@ -26,11 +29,14 @@ end
 
 --
 
-function PropManager.addProp(self: PropManager, prop: Prop.Prop): number
+function PropManager.addProp(self: PropManager, prop: Prop.Prop, scene: PropSceneAccessor.PropSceneAccessor): number
 	local id = self.nextId + 1
 	self.nextId = id
 	prop.id = id
 	self.props[id] = prop
+	if prop.setup then
+		prop:setup(scene)
+	end
 	return id
 end
 
@@ -55,6 +61,23 @@ function PropManager.destroyAllProps(self: PropManager): ()
 
 	table.clear(self.props)
 	self.nextId = 1
+end
+
+--
+
+function PropManager.getDoorBoundParts(self: PropManager): {BasePart}
+	return CollectionService:GetTagged(CollectionTags.DOOR_PATH_BOUNDS) :: {BasePart}
+end
+
+function PropManager.getDoorFromPart(self: PropManager, part: BasePart): TraversableDoor.TraversableDoor?
+	-- TODO: Messy as shit to get a door.
+	local id = part:GetAttribute("DoorPropId") :: number?
+	if not id or type(id) ~= "number" then
+		warn(`Invalid door '{part}': Invalid 'DoorPropId' attribute`)
+		return nil
+	end
+
+	return self.props[id] :: TraversableDoor.TraversableDoor?
 end
 
 --

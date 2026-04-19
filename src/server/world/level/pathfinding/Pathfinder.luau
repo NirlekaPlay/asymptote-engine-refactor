@@ -5,6 +5,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local RblxAgentParameters = require(ServerScriptService.server.world.entity.ai.navigation.RblxAgentParameters)
 local NodeEvaluator = require(ServerScriptService.server.world.level.pathfinding.NodeEvaluator)
 local NodePath = require(ServerScriptService.server.world.level.pathfinding.NodePath)
+local SceneAccessor = require(ServerScriptService.server.world.level.scene.SceneAccessor)
 
 --[=[
 	@class Pathfinder
@@ -16,9 +17,9 @@ export type Pathfinder = typeof(setmetatable({} :: {
 	nodeEvaluator: NodeEvaluator.NodeEvaluator
 }, Pathfinder))
 
-function Pathfinder.new(): Pathfinder
+function Pathfinder.new(scene: SceneAccessor.SceneAccessor): Pathfinder
 	return setmetatable({
-		nodeEvaluator = NodeEvaluator.new()
+		nodeEvaluator = NodeEvaluator.new(scene)
 	}, Pathfinder)
 end
 
@@ -36,6 +37,10 @@ function Pathfinder.findPathAsync(
 	local rblxPath = PathfindingService:CreatePath(agentParams :: any)
 	rblxPath:ComputeAsync(startPos, endPos)
 
+	-- For some fucking reason this condition keeps failing until I put this variable assignment.
+	-- Must be some fucking Roblox C++ bullshit or somethin I don't fucking know. Any attempts to print it
+	-- will just resolve the problem.
+	local _status = rblxPath.Status
 	if rblxPath.Status == Enum.PathStatus.Success then
 		local refined = self:refinePathForDoors(rblxPath:GetWaypoints(), agentParams)
 

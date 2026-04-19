@@ -28,6 +28,7 @@ local Door = {
 Door.__index = Door
 
 export type Door = Prop.Prop & typeof(setmetatable({} :: {
+	scene: PropSceneAccessor.PropSceneAccessor,
 	state: DoorState,
 	targetDegree: number,
 	turningTimeAccum: number,
@@ -107,6 +108,11 @@ function Door.getId(self: Door): number
 	return self.id
 end
 
+function Door.setup(self: Door, scene: PropSceneAccessor.PropSceneAccessor): ()
+	self.scene = scene
+	self.doorPathReqPart:SetAttribute("DoorPropId", (self :: any):getId())
+end
+
 --
 
 function Door.getForwardDir(self: Door): Vector3
@@ -130,6 +136,48 @@ function Door.unlockBothSides(self: Door): ()
 	self.lockFront = false
 	self.lockBack = false
 end
+
+--
+
+function Door.isClosing(self: Door): boolean
+	return self:isTurning() and not self:isClosed()
+end
+
+function Door.open(self: Door, side: DoorSides, overrideLock: boolean?): ()
+	self:onPromptTriggered(side, overrideLock)
+end
+
+function Door.close(self: Door): ()
+	if self:isClosed() or self:isClosing() then
+		return
+	end
+
+	self:onPromptTriggered(Door.Sides.MIDDLE)
+end
+
+function Door.getSideRelativeTo(self: Door, pos: Vector3): DoorSides
+	local basePos = self.doorPathReqPart.Position
+	local forwardDir = self:getForwardDir()
+	local origin = basePos
+	local toTarget = (pos - origin)
+	local dotResult = forwardDir:Dot(toTarget)
+	local openingSide
+
+	if dotResult > 0 then
+		-- Agent is infront of the door
+		openingSide = Door.Sides.FRONT
+	elseif dotResult < 0 then
+		-- Agent is behind
+		openingSide = Door.Sides.BACK
+	else
+		-- Exactly perpendicular, just put it to front
+		openingSide = Door.Sides.FRONT
+	end
+
+	return openingSide
+end
+
+--
 
 function Door.onPromptTriggered(self: Door, promptSide: DoorSides, overrideLock: boolean?): ()
 	if self:isTurning() then
@@ -213,11 +261,6 @@ function Door.onPromptTriggered(self: Door, promptSide: DoorSides, overrideLock:
 end
 
 function Door.update(self: Door, deltaTime: number, scene: PropSceneAccessor.PropSceneAccessor): ()
-	-- TODO: Awful hack alert.
-	if self.scene ~= scene then
-		self.scene = scene
-	end
-
 	if self:isTurning() then
 		self.turningTimeAccum += deltaTime;
 		

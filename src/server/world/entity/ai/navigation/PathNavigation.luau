@@ -5,6 +5,7 @@ local MoveControl = require(ServerScriptService.server.world.entity.ai.control.M
 local RblxAgentParameters = require(ServerScriptService.server.world.entity.ai.navigation.RblxAgentParameters)
 local NodePath = require(ServerScriptService.server.world.level.pathfinding.NodePath)
 local Pathfinder = require(ServerScriptService.server.world.level.pathfinding.Pathfinder)
+local SceneAccessor = require(ServerScriptService.server.world.level.scene.SceneAccessor)
 
 local DEFAULT_SPEED_MODIFIER = 1
 
@@ -28,6 +29,7 @@ export type PathNavigation = typeof(setmetatable({} :: {
 }, PathNavigation))
 
 function PathNavigation.new(
+	scene: SceneAccessor.SceneAccessor,
 	character: Model,
 	moveControl: MoveControl.MoveControl,
 	agentParams: RblxAgentParameters.AgentParameters
@@ -39,7 +41,7 @@ function PathNavigation.new(
 		humanoid = (character :: any).Humanoid :: Humanoid,
 		character = character,
 		speedModifier = DEFAULT_SPEED_MODIFIER,
-		pathfinder = Pathfinder.new(),
+		pathfinder = Pathfinder.new(scene),
 		--
 		currentMoveToThread = nil :: thread?,
 		moveToFinishedConn = nil :: RBXScriptConnection?

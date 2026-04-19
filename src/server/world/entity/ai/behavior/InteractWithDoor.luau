@@ -1,19 +1,11 @@
 --!strict
 
-local Debris = game:GetService("Debris")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local Bounds = require(ReplicatedStorage.shared.util.math.geometry.Bounds)
-local Draw = require(ReplicatedStorage.shared.thirdparty.Draw)
 local Agent = require(ServerScriptService.server.world.entity.npc.Agent)
-local DetectionAgent = require(ServerScriptService.server.DetectionAgent)
 local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.memory.MemoryModuleTypes)
 local MemoryStatus = require(ServerScriptService.server.world.entity.ai.memory.MemoryStatus)
-local Level = require(ServerScriptService.server.world.level.Level)
-local Door = require(ServerScriptService.server.world.level.clutter.props.Door)
-
-local DEBUG_NEXT_DOOR_NODE_POS = false
+local TraversableDoor = require(ServerScriptService.server.world.level.pathfinding.TraversableDoor)
 
 --[=[
 	@class InteractWithDoor
@@ -28,7 +20,7 @@ export type InteractWithDoor = typeof(setmetatable({} :: {
 
 type MemoryModuleType<T> = MemoryModuleTypes.MemoryModuleType<T>
 type MemoryStatus = MemoryStatus.MemoryStatus
-type Agent = Agent.Agent & DetectionAgent.DetectionAgent
+type Agent = Agent.Agent
 
 function InteractWithDoor.new(): InteractWithDoor
 	return setmetatable({
@@ -70,106 +62,43 @@ function InteractWithDoor.doStop(self: InteractWithDoor, agent: Agent): ()
 end
 
 function InteractWithDoor.doUpdate(self: InteractWithDoor, agent: Agent, deltaTime: number): ()
-	local nodeEvaluator = agent:getNavigation():getPathfinder():getNodeEvaluator()
 	local path = agent:getBrain():getMemory(MemoryModuleTypes.PATH):get()
+	if path:isDone() then
+		return
+	end
+
 	local nextNode = path:getNextNode()
+	local prevNode = path:getPreviousNode()
+	local nodeEvaluator = agent:getNavigation():getPathfinder():getNodeEvaluator()
 
 	if not nodeEvaluator:isWaypointDoor(nextNode) then
 		return
 	end
 
-	local doorBoundsInRadius = nodeEvaluator:getDoorBoundPartsAt(nextNode.Position)
-	local agentPos = (agent.character.HumanoidRootPart :: BasePart).Position
-
-	if DEBUG_NEXT_DOOR_NODE_POS then
-		Debris:AddItem(Draw.point(nextNode.Position), 0.1)
+	local door = nodeEvaluator:getDoorOnPathSegment(prevNode.Position, nextNode.Position)
+	if not door then
+		return
 	end
 
-	-- Performance?
-	-- Hah, whats that?
-	-- If it works it works.
+	if not door:isClosed() and not door:isClosing() then
+		self:scheduleClose(door)
+		return
+	end
 
-	-- TODO: Do the thing.
+	local agentPos = agent:getPosition()
+	local side = door:getSideRelativeTo(agentPos)
+	door:open(side, true)
+	self:scheduleClose(door)
+end
 
-	-- O(*sodding terrible*)
-	for _, part in doorBoundsInRadius do
-		-- What the fuck.
-		local propsInLevel = Level.getProps()
-		for prop in propsInLevel do
-			if getmetatable(prop) == Door and (prop :: Door.Door).doorPathReqPart == part then
-				local door = prop :: Door.Door
-				if door:isClosed() or door.state == Door.States.CLOSING then
-					local basePos = part.Position
-					local forwardDir = door:getForwardDir()
-					local origin = basePos
-					local toTarget = (agentPos - origin)
-					local dotResult = forwardDir:Dot(toTarget)
-					local openingSide
-
-					if dotResult > 0 then
-						-- Agent is infront of the door
-						openingSide = Door.Sides.FRONT
-					elseif dotResult < 0 then
-						-- Agent is behind
-						openingSide = Door.Sides.BACK
-					else
-						-- Exactly perpendicular, just put it to front
-						openingSide = Door.Sides.FRONT
-					end
-					door:onPromptTriggered(openingSide, true)
-
-					-- Sigh.
-					if not self.sanityInduceThread then
-						self.sanityInduceThread = task.delay(1, function()
-							local shouldClose = true
-							if not part then
-								self.sanityInduceThread = nil
-								print("Return sanity thread")
-								return
-							end
-
-							if door:isClosed() then
-								self.sanityInduceThread = nil
-								return
-							end
-
-							if shouldClose then
-								door:onPromptTriggered(Door.Sides.MIDDLE)
-							end
-							self.sanityInduceThread = nil
-						end)
-					end
-					
-					break
-				elseif door:isOpen() then
-					if not self.sanityInduceThread then
-						self.sanityInduceThread = task.delay(1, function()
-							local shouldClose = true
-							if not part then
-								self.sanityInduceThread = nil
-								print("Return sanity thread")
-								return
-							end
-
-							if door:isClosed() then
-								self.sanityInduceThread = nil
-								return
-							end
-
-							if shouldClose then
-								door:onPromptTriggered(Door.Sides.MIDDLE)
-							end
-							self.sanityInduceThread = nil
-						end)
-					end
-
-					break
-				end
-			end
+function InteractWithDoor.scheduleClose(self: InteractWithDoor, door: TraversableDoor.TraversableDoor): ()
+	if self.sanityInduceThread then return end
+	self.sanityInduceThread = task.delay(1, function()
+		if not door:isClosed() or door:isClosing() then
+			door:close()
 		end
-
-		break
-	end
+		self.sanityInduceThread = nil
+	end)
 end
 
 return InteractWithDoor

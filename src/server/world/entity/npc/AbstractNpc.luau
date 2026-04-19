@@ -42,7 +42,7 @@ function AbstractNpc.new(scene, character: Model & { Humanoid: Humanoid, Humanoi
 	self.levelCallback = EntityInLevelCallback.NULL
 	self.brain = TestNpcAi.makeBrain(self :: any)
 	self.moveControl = MoveControl.new(humanoid)
-	self.pathNavigation = PathNavigation.new(character, self.moveControl, {
+	self.pathNavigation = PathNavigation.new(scene, character, self.moveControl, {
 		AgentRadius = 2,
 		AgentHeight = 4,
 		AgentCanJump = false,
@@ -57,7 +57,7 @@ function AbstractNpc.new(scene, character: Model & { Humanoid: Humanoid, Humanoi
 	self.faceControl:setFace("Neutral")
 	self.typeId = "npc"
 	self.humanoid = (character :: any).Humanoid :: Humanoid
-	self.random = Random.new()
+	self.random = Random.new( )
 	self._maid = Maid.new()
 
 	-- Animations
