@@ -9,6 +9,7 @@ local Draw = require(ReplicatedStorage.shared.thirdparty.Draw)
 local Maid = require(ReplicatedStorage.shared.util.misc.Maid)
 local DoorHingeComponent = require(ServerScriptService.server.world.level.props.doors.DoorHingeComponent)
 local DoorPromptComponent = require(ServerScriptService.server.world.level.props.doors.DoorPromptComponent)
+local DoorSoundComponent = require(ServerScriptService.server.world.level.props.doors.DoorSoundComponent)
 local PropSceneAccessor = require(ServerScriptService.server.world.level.scene.props.PropSceneAccessor)
 local CollisionGroupTypes = require(ServerScriptService.server.world.physics.collision.CollisionGroupTypes)
 
@@ -457,6 +458,7 @@ function DoorCreator.createFromPlaceholder(placeholder: BasePart, model: Model, 
 		},
 		DoorPromptComponent.new(prompts, isDoubleDoor or false),
 		(isDoubleDoor and hingePart2) and DoorHingeComponent.double(hingePart, hingePart2) or DoorHingeComponent.single(hingePart),
+		DoorSoundComponent.new(soundOpen, soundClose, soundUnlock),
 		pathReqPart,
 		lookVec,
 		maid,
@@ -474,11 +476,6 @@ function DoorCreator.createFromPlaceholder(placeholder: BasePart, model: Model, 
 			print("Proximity prompt", "Front", "triggered for", model)
 		end
 		newDoor:onPromptTriggered(Door.Sides.FRONT)
-		if newDoor.state == Door.States.OPENING then
-			soundOpen:Play()
-		else
-			soundClose:Play()
-		end
 	end
 
 	local function triggerBack(player: Player): ()
@@ -486,11 +483,6 @@ function DoorCreator.createFromPlaceholder(placeholder: BasePart, model: Model, 
 			print("Proximity prompt", "Back", "triggered for", model)
 		end
 		newDoor:onPromptTriggered(Door.Sides.BACK)
-		if newDoor.state == Door.States.OPENING then
-			soundOpen:Play()
-		else
-			soundClose:Play()
-		end
 	end
 
 	local function triggerMiddle(player): ()
@@ -498,11 +490,6 @@ function DoorCreator.createFromPlaceholder(placeholder: BasePart, model: Model, 
 			print("Proximity prompt", "Middle", "triggered for", model)
 		end
 		newDoor:onPromptTriggered(Door.Sides.MIDDLE)
-		if newDoor.state == Door.States.OPENING then
-			soundOpen:Play()
-		else
-			soundClose:Play()
-		end
 	end
 
 	maid:giveTask(frontProxPrompt:getTriggeredEvent():Connect(triggerFront))
@@ -523,10 +510,9 @@ function DoorCreator.createFromPlaceholder(placeholder: BasePart, model: Model, 
 		end
 		maid:giveTask(scene:subscribeExpressionChange(`{remoteUnlock}`, function(v)
 			if v and not (newDoor:isOpen() or newDoor:isTurning()) then
-				task.wait(0.3)
 				if scene:getState(remoteUnlock) then
 					newDoor:unlockBothSides()
-					soundUnlock:Play()
+					newDoor.soundComponent:onDoorUnlocked()
 				end
 			end
 		end))

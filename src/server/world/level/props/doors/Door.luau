@@ -6,6 +6,7 @@ local WorldInteractionPrompt = require(ServerScriptService.server.world.level.in
 local Prop = require(ServerScriptService.server.world.level.props.Prop)
 local DoorHingeComponent = require(ServerScriptService.server.world.level.props.doors.DoorHingeComponent)
 local DoorPromptComponent = require(ServerScriptService.server.world.level.props.doors.DoorPromptComponent)
+local DoorSoundComponent = require(ServerScriptService.server.world.level.props.doors.DoorSoundComponent)
 local PropSceneAccessor = require(ServerScriptService.server.world.level.scene.props.PropSceneAccessor)
 local Maid = require(ReplicatedStorage.shared.util.misc.Maid)
 
@@ -34,6 +35,7 @@ export type Door = Prop.Prop & typeof(setmetatable({} :: {
 	turningTimeAccum: number,
 	promptComponent: DoorPromptComponent.DoorPromptComponent,
 	hingeComponent: DoorHingeComponent.DoorHingeComponent,
+	soundComponent: DoorSoundComponent.DoorSoundComponent,
 	doorPathReqPart: BasePart,
 	forwardDir: Vector3,
 	openingSide: DoorSides,
@@ -71,6 +73,7 @@ function Door.new(
 	prompts: DoorPrompts,
 	promptComponent: DoorPromptComponent.DoorPromptComponent,
 	hingeComponent: DoorHingeComponent.DoorHingeComponent,
+	soundComponent: DoorSoundComponent.DoorSoundComponent,
 	doorPathReqPart: BasePart,
 	forwardDir: Vector3,
 	maid: Maid.Maid,
@@ -86,6 +89,7 @@ function Door.new(
 		turningTimeAccum = 0,
 		promptComponent = promptComponent,
 		hingeComponent = hingeComponent,
+		soundComponent = soundComponent,
 		doorPathReqPart = doorPathReqPart,
 		forwardDir = forwardDir,
 		openingSide = Door.Sides.MIDDLE,
@@ -249,6 +253,14 @@ function Door.onPromptTriggered(self: Door, promptSide: DoorSides, overrideLock:
 	else -- Closing
 		self.state = Door.States.CLOSING
 		self:setDoorPartsCollision(false)
+	end
+
+	-- Sound
+
+	if self.state == Door.States.CLOSING then
+		(self.soundComponent :: DoorSoundComponent.DoorSoundComponent):onDoorClosed()
+	elseif self.state == Door.States.OPENING then
+		(self.soundComponent :: DoorSoundComponent.DoorSoundComponent):onDoorOpened()
 	end
 
 	-- Remote unlock
