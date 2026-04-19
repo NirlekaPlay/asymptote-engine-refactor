@@ -29,9 +29,11 @@ end
 
 --
 
-function NavMesh.setPostsFromFolder(self: NavMesh, nodesFolder: Folder): ()
+function NavMesh.setPostsFromFolder(self: NavMesh, nodesFolder: Folder, destroyPlaceholder: boolean?): ()
 	table.clear(self.registry)
 	table.clear(self.groups)
+
+	destroyPlaceholder = destroyPlaceholder or true
 
 	local stack: {{folder: Folder, groupName: string}} = {{folder = nodesFolder, groupName = nodesFolder.Name}}
 	local top = 1
@@ -53,6 +55,7 @@ function NavMesh.setPostsFromFolder(self: NavMesh, nodesFolder: Folder): ()
 					self.registry[child] = Node.new(child.CFrame)
 				end
 				table.insert(self.groups[groupName], self.registry[child])
+				child:Destroy()
 			elseif child:IsA("Folder") then
 				top += 1
 				stack[top] = {folder = child, groupName = child.Name}

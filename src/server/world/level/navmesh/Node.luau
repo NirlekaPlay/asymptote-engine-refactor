@@ -30,7 +30,7 @@ function Node.new(cframe: CFrame, doDebug: boolean?): Node
 		cframe = cframe,
 		occupied = false,
 		cachedBlockPos = nil :: Vector3?,
-		_debugPart = (DEBUG_MODE and doDebug) and Draw.box(cframe, DEBUG_PART_SIZE, DEBUG_UNOCCUPIED_COLOR) or nil
+		_debugPart = (DEBUG_MODE or doDebug) and Draw.box(cframe, DEBUG_PART_SIZE, DEBUG_UNOCCUPIED_COLOR) or nil
 	}, Node)
 end
 
