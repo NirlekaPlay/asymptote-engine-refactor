@@ -4,7 +4,7 @@ local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local CompletableFuture = require(ReplicatedStorage.shared.concurrent.CompletableFuture)
+local CompletableFuture = require(ReplicatedStorage.shared.util.concurrent.CompletableFuture)
 local Draw = require(ReplicatedStorage.shared.thirdparty.Draw)
 local Vec3 = require(ReplicatedStorage.shared.util.vector.Vec3)
 local Agent = require(ServerScriptService.server.world.entity.npc.Agent)
