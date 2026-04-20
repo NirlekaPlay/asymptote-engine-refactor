@@ -6,6 +6,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local CompletableFuture = require(ReplicatedStorage.shared.util.concurrent.CompletableFuture)
 local Draw = require(ReplicatedStorage.shared.thirdparty.Draw)
+local WeakRef = require(ReplicatedStorage.shared.util.misc.WeakRef)
 local Vec3 = require(ReplicatedStorage.shared.util.vector.Vec3)
 local Agent = require(ServerScriptService.server.world.entity.npc.Agent)
 local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.memory.MemoryModuleTypes)
@@ -173,7 +174,7 @@ function WalkToTargetSink.doUpdate(self: WalkToTargetSink, agent: Agent, deltaTi
 end
 
 function WalkToTargetSink.tryComputePath(self: WalkToTargetSink, agent: Agent, walkTarget: WalkTarget.WalkTarget): ()
-	local brain = agent:getBrain()
+	local brainRef = WeakRef(agent:getBrain())
 	local targetPos = walkTarget:getTarget():getCurrentPosition()
 
 	self.isComputing = true
@@ -181,6 +182,11 @@ function WalkToTargetSink.tryComputePath(self: WalkToTargetSink, agent: Agent, w
 	CompletableFuture.supplyAsync(function()
 		return agent:getNavigation():createPathAsync(targetPos)
 	end):thenAccept(function(path)
+		local brain = brainRef.value
+		if not brain or self then
+			return
+		end
+
 		self.isComputing = false
 
 		if path then
