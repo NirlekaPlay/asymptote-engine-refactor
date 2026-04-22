@@ -117,9 +117,17 @@ function ExpressionParser.evaluate(node: ASTNode?, context: ExpressionContext.Ex
 				op == LESS_THAN_OET_OPERATOR or
 				op == MORE_THAN_OET_OPERATOR then
 
-				print(node.left)
-				print(node.right)
-				error(`Invalid binary operation: '{node.left}' (={left}) [{op}] '{node.right}' (={right})`)
+				warn(node.left)
+				warn(node.right)
+				warn(`Invalid binary operation: '{node.left}' (={left}) [{op}] '{node.right}' (={right}); replacing with 0\n----`)
+
+				if left == nil then
+					left = 0
+				end
+
+				if right == nil then
+					right = 0
+				end
 			end
 		end
 
