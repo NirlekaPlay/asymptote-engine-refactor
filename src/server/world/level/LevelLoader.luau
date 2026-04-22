@@ -7,6 +7,7 @@ local MissionSetupReader = require(ServerScriptService.server.world.level.missio
 local PropRegistry = require(ServerScriptService.server.world.level.props.registry.PropRegistry)
 local Scene = require(ServerScriptService.server.world.level.scene.Scene)
 local LocalizedStringsReplicatorComponent = require(ServerScriptService.server.world.level.scene.components.LocalizedStringsReplicatorComponent)
+local ObjectivesComponent = require(ServerScriptService.server.world.level.scene.components.ObjectivesComponent)
 local StateComponentRegistry = require(ServerScriptService.server.world.level.scene.components.registry.StateComponentRegistry)
 local Clutter = require(ServerScriptService.server.world.level.scene.props.Clutter)
 local LightingSetter = require(ServerScriptService.server.world.lighting.LightingSetter)
@@ -79,11 +80,17 @@ function LevelLoader.loadFromFolder(folder: Folder): Scene.Scene
 		parseNpcs(npcsFolder)
 	end
 
+	-- Initially cascade states to avoid uninitialized states
+	newScene.stateController:tick()
+
+	newScene.componentManager:sceneReady()
+
 	return newScene
 end
 
 function LevelLoader.setupDefaultComponents(scene: Scene.Scene): ()
 	scene.componentManager:addComponent(LocalizedStringsReplicatorComponent.new())
+	scene.componentManager:addComponent(ObjectivesComponent.new())
 end
 
 function LevelLoader.getAndParseMissionSetupModule(sceneFolder: Folder)

@@ -41,6 +41,17 @@ end
 
 --
 
+function StateComponentManager.sceneReady(self: StateComponentManager): ()
+	local scene = self.scene
+	for _, component in self.components do
+		if component.onSceneReady then
+			component:onSceneReady(scene)
+		end
+	end
+end
+
+--
+
 function StateComponentManager.destroy(self: StateComponentManager): ()
 	for _, component in self.components do
 		component:destroy(self.scene)

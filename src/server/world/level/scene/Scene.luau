@@ -115,6 +115,10 @@ function Scene.promptBuilder(self: Scene): InteractionPromptBuilder.InteractionP
 	return InteractionPromptBuilder.new(self :: any)
 end
 
+function Scene.getSceneConfig(self: Scene): MissionSetup.MissionSetup
+	return self.sceneConfigObj
+end
+
 --
 
 function Scene.update(self: Scene, deltaTime: number): ()
