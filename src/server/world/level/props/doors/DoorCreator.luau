@@ -2,7 +2,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
-local CollectionTags = require(ServerScriptService.server.world.collection.CollectionTags)
+local CollectionTags = require(ReplicatedStorage.shared.world.collection.CollectionTags)
 local WorldInteractionPrompt = require(ServerScriptService.server.world.level.interaction.WorldInteractionPrompt)
 local Door = require(ServerScriptService.server.world.level.props.doors.Door)
 local Draw = require(ReplicatedStorage.shared.thirdparty.Draw)

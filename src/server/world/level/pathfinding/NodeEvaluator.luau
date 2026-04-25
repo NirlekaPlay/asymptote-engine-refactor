@@ -4,7 +4,7 @@ local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Draw = require(ReplicatedStorage.shared.thirdparty.Draw)
-local CollectionTags = require(ServerScriptService.server.world.collection.CollectionTags)
+local CollectionTags = require(ReplicatedStorage.shared.world.collection.CollectionTags)
 local TraversableDoor = require(ServerScriptService.server.world.level.pathfinding.TraversableDoor)
 local SceneAccessor = require(ServerScriptService.server.world.level.scene.SceneAccessor)
 
