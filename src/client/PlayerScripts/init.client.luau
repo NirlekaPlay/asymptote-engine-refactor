@@ -206,6 +206,8 @@ createLetterbox(Players.LocalPlayer.PlayerGui)
 local function proccessLightingInst(inst: Instance): ()
 	if inst:IsA("DepthOfFieldEffect") then
 		inst.Enabled = false
+	elseif inst:IsA("BloomEffect") then
+		inst.Enabled = false
 	end
 end
 
@@ -250,8 +252,18 @@ local function switchTo(name: string): ()
 end
 
 local SENSOR_HEIGHT_IN_MM = 24
-local currentFocalLength = 35
+local currentFocalLength = 20
 local currentFStop = 16
+local initiFstop = false
+local initFocalLength = false
+
+local CHANGE_BLOOM_ACCORDING_TO_FSTOP = true
+
+local iDof = Instance.new("DepthOfFieldEffect")
+iDof.Parent = currentCamera
+
+local bloom = Instance.new("BloomEffect")
+bloom.Parent = currentCamera
 
 local applyFStop
 
@@ -264,15 +276,16 @@ local function setFocalLength(f: number): ()
 	
 	currentCamera.FieldOfView = math.deg(fovRadians)
 	currentFocalLength = f
-	applyFStop(currentFStop)
+	applyFStop(iDof, 0, currentFStop, currentFocalLength)
 	currentCamera:SetAttribute("FocalLength", f)
 end
 
 currentCamera:GetAttributeChangedSignal("FocalLength"):Connect(function()
 	local f = currentCamera:GetAttribute("FocalLength")
-	if f == currentFocalLength then
+	if initFocalLength and f == currentFocalLength then
 		return
 	end
+	initFocalLength = true
 	setFocalLength(f :: number)
 end)
 
@@ -280,10 +293,8 @@ currentCamera:SetAttribute("FocalLength", currentFocalLength)
 
 --
 
-local iDof = Instance.new("DepthOfFieldEffect")
-iDof.Parent = currentCamera
-
 applyFStop = function(dof: DepthOfFieldEffect, focusDistance: number, fStop: number, focalLength: number): ()
+	currentFStop = fStop
 	local c = 0.03
 	local dofDepth = (2 * focusDistance^2 * fStop * c) / (focalLength^2)
 	local inFocusRadius = dofDepth * 0.5
@@ -294,6 +305,17 @@ applyFStop = function(dof: DepthOfFieldEffect, focusDistance: number, fStop: num
 	dof.InFocusRadius = inFocusRadius
 	dof.FarIntensity = intensity
 	dof.NearIntensity = intensity * 0.5
+
+	if CHANGE_BLOOM_ACCORDING_TO_FSTOP then
+		-- logic: Smaller fStop = Larger Aperture = More Light/Glow
+		-- We map f-stop (1.4 to 16) to Bloom Intensity
+		local bloomBase = 1.0
+		local intensityAdjust = math.clamp(2 / fStop, 0, 2) -- f/1.4 is bright, f/16 is dim
+		
+		-- min size should be 21
+		bloom.Intensity = bloomBase * intensityAdjust
+		bloom.Size = 21 + (100 * (1/fStop - 1/16))
+	end
 end
 
 local function setFStop(f: number): ()
@@ -302,9 +324,10 @@ end
 
 currentCamera:GetAttributeChangedSignal("FStop"):Connect(function()
 	local f = currentCamera:GetAttribute("FStop")
-	if f == currentFStop then
+	if initiFstop and f == currentFStop then
 		return
 	end
+	initiFstop = true
 	setFStop(f :: number)
 end)
 
