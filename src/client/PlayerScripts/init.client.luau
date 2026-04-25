@@ -4,14 +4,17 @@ local CollectionService = game:GetService("CollectionService")
 local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local StarterPlayer = game:GetService("StarterPlayer")
+local CameraBrain = require(ReplicatedStorage.shared.cinemachine.camera.CameraBrain)
 local DialogueController = require(StarterPlayer.StarterPlayerScripts.client.modules.ui.dialogue.DialogueController)
 local VirtualCamera = require(ReplicatedStorage.shared.cinemachine.camera.VirtualCamera)
+local HandheldNoise = require(ReplicatedStorage.shared.cinemachine.camera.components.HandheldNoise)
 local MutableTextComponent = require(ReplicatedStorage.shared.network.chat.MutableTextComponent)
 local TextColor = require(ReplicatedStorage.shared.network.chat.TextColor)
 local TextStyle = require(ReplicatedStorage.shared.network.chat.TextStyle)
-local ObjectivesScreen = require(StarterPlayer.StarterPlayerScripts.client.modules.ui.screens.ObjectivesScreen)
+require(StarterPlayer.StarterPlayerScripts.client.modules.ui.screens.ObjectivesScreen)
 
 -- STUDIO UTILS:
 
@@ -66,8 +69,9 @@ createRuleOfThirdsGrid(game:GetService("StarterGui"))
 --createRuleOfThirdsGrid(Players.LocalPlayer.PlayerGui)
 
 do
-	if StarterGui:FindFirstChild("RuleOfThirds") then
-		StarterGui:FindFirstChild("RuleOfThirds"):Destroy()
+	local found = StarterGui:FindFirstChild("RuleOfThirds")
+	if found then
+		found:Destroy()
 	end
 end
 
@@ -113,31 +117,6 @@ end
 
 	ALICE: *sigh* I don't know how the Council will think of this, but sure. I’ll help.
 ]=]
-
---
-
-local currentCamera = workspace.CurrentCamera
-currentCamera.CameraType = Enum.CameraType.Scriptable
-local virtualCameras = {}
-
-local function setupCam(inst: Instance): ()
-	if not inst:IsA("BasePart") then
-		return
-	end
-
-	local vCam = VirtualCamera.new()
-	vCam:setCFrame(inst.CFrame)
-
-	inst.Transparency = 1
-
-	virtualCameras[inst.Name] = vCam
-end
-
-for _, inst in CollectionService:GetTagged("vCam") do
-	setupCam(inst)
-end
-
-CollectionService:GetInstanceAddedSignal("vCam"):Connect(setupCam)
 
 --
 
@@ -217,121 +196,65 @@ end
 
 Lighting.ChildAdded:Connect(proccessLightingInst)
 
---
+local currentCamera = workspace.CurrentCamera
+currentCamera.CameraType = Enum.CameraType.Scriptable
 
-local SHAKE_AMPLITUDE = 0.02  -- how much it moves (position)
-local SHAKE_ROTATION_AMPLITUDE = 0.2  -- how much it tilts (degrees)
-local SHAKE_FREQUENCY = 0.8  -- how fast it breathes
-local shakeTime = 0
-
-local RunService = game:GetService("RunService")
-
-local function getShakeOffset(t: number): CFrame
-	local px = math.noise(t * SHAKE_FREQUENCY, 0, 0) * SHAKE_AMPLITUDE
-	local py = math.noise(0, t * SHAKE_FREQUENCY, 0) * SHAKE_AMPLITUDE
-	local pz = math.noise(0, 0, t * SHAKE_FREQUENCY) * SHAKE_AMPLITUDE
-
-	local rx = math.noise(t * SHAKE_FREQUENCY, 100, 0) * SHAKE_ROTATION_AMPLITUDE
-	local ry = math.noise(0, 100, t * SHAKE_FREQUENCY) * SHAKE_ROTATION_AMPLITUDE
-	local rz = math.noise(100, t * SHAKE_FREQUENCY, 0) * SHAKE_ROTATION_AMPLITUDE
-
-	return CFrame.new(px, py, pz) * CFrame.Angles(math.rad(rx), math.rad(ry), math.rad(rz))
-end
-
-local activeCFrame = CFrame.new()
-
-RunService.RenderStepped:Connect(function(dt: number)
-	shakeTime += dt
-	currentCamera.CFrame = activeCFrame * getShakeOffset(shakeTime)
-end)
-
---
-
-local function switchTo(name: string): ()
-	activeCFrame = virtualCameras[name].cframe
-end
-
-local SENSOR_HEIGHT_IN_MM = 24
-local currentFocalLength = 20
-local currentFStop = 16
-local initiFstop = false
-local initFocalLength = false
-
-local CHANGE_BLOOM_ACCORDING_TO_FSTOP = true
-
-local iDof = Instance.new("DepthOfFieldEffect")
+local iDof  = Instance.new("DepthOfFieldEffect")
 iDof.Parent = currentCamera
-
 local bloom = Instance.new("BloomEffect")
 bloom.Parent = currentCamera
 
-local applyFStop
+local brain = CameraBrain.new(
+	20,
+	16,
+	0,
+	24,
+	currentCamera,
+	{ dof = iDof, bloom = bloom }
+)
+brain:init()
 
-local function setFocalLength(f: number): ()
-	if f <= 0 then
+local virtualCameras: { [string]: VirtualCamera.VirtualCamera } = {}
+
+local shakeComponent = HandheldNoise.new("light")
+
+local function setupCam(inst: Instance): ()
+	if not inst:IsA("BasePart") then
 		return
 	end
-	
-	local fovRadians = 2 * math.atan(SENSOR_HEIGHT_IN_MM / (2 * f))
-	
-	currentCamera.FieldOfView = math.deg(fovRadians)
-	currentFocalLength = f
-	applyFStop(iDof, 0, currentFStop, currentFocalLength)
-	currentCamera:SetAttribute("FocalLength", f)
+
+	local vCam = VirtualCamera.new()
+
+	-- TODO: This bullshit.
+
+	vCam._state.fStop = 16
+	vCam._state.focalLength = 20
+	vCam._state.focusDist = 0
+
+	-- static CFrame cams: no Body/Aim components needed.
+	-- we just prime the state directly.
+	vCam._state.position = inst.CFrame.Position
+	vCam._state.rotation = inst.CFrame - inst.CFrame.Position
+
+	-- every cam in this scene gets the same breathing shake
+	vCam:addComponent(shakeComponent)
+
+	inst.Transparency = 1
+	virtualCameras[inst.Name] = vCam
 end
 
-currentCamera:GetAttributeChangedSignal("FocalLength"):Connect(function()
-	local f = currentCamera:GetAttribute("FocalLength")
-	if initFocalLength and f == currentFocalLength then
-		return
-	end
-	initFocalLength = true
-	setFocalLength(f :: number)
+for _, inst in CollectionService:GetTagged("vCam") do
+	setupCam(inst)
+end
+CollectionService:GetInstanceAddedSignal("vCam"):Connect(setupCam)
+
+local function switchTo(name: string): ()
+	brain:setActiveCamera(virtualCameras[name], 0)
+end
+
+RunService.PreRender:Connect(function(dt: number)
+	brain:update(dt)
 end)
-
-currentCamera:SetAttribute("FocalLength", currentFocalLength)
-
---
-
-applyFStop = function(dof: DepthOfFieldEffect, focusDistance: number, fStop: number, focalLength: number): ()
-	currentFStop = fStop
-	local c = 0.03
-	local dofDepth = (2 * focusDistance^2 * fStop * c) / (focalLength^2)
-	local inFocusRadius = dofDepth * 0.5
-
-	local intensity = math.clamp(1 / (fStop / 1.4), 0, 1)
-
-	dof.FocusDistance = focusDistance
-	dof.InFocusRadius = inFocusRadius
-	dof.FarIntensity = intensity
-	dof.NearIntensity = intensity * 0.5
-
-	if CHANGE_BLOOM_ACCORDING_TO_FSTOP then
-		-- logic: Smaller fStop = Larger Aperture = More Light/Glow
-		-- We map f-stop (1.4 to 16) to Bloom Intensity
-		local bloomBase = 1.0
-		local intensityAdjust = math.clamp(2 / fStop, 0, 2) -- f/1.4 is bright, f/16 is dim
-		
-		-- min size should be 21
-		bloom.Intensity = bloomBase * intensityAdjust
-		bloom.Size = 21 + (100 * (1/fStop - 1/16))
-	end
-end
-
-local function setFStop(f: number): ()
-	applyFStop(iDof, 0, f, currentFocalLength)
-end
-
-currentCamera:GetAttributeChangedSignal("FStop"):Connect(function()
-	local f = currentCamera:GetAttribute("FStop")
-	if initiFstop and f == currentFStop then
-		return
-	end
-	initiFstop = true
-	setFStop(f :: number)
-end)
-
-currentCamera:SetAttribute("FStop", currentFStop)
 
 --
 
