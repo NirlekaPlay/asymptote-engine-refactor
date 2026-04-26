@@ -18,11 +18,11 @@ local Curves = {
 }
 
 local EnumCurves = {
-	CUT = "Cut",
-	LINEAR = "Linear",
-	EASE_IN = "EaseIn",
-	EASE_OUT = "EaseOut",
-	EASE_IN_OUT = "EaseInOut"
+	CUT = "Cut" :: "Cut",
+	LINEAR = "Linear":: "Linear",
+	EASE_IN = "EaseIn":: "EaseIn",
+	EASE_OUT = "EaseOut":: "EaseOut",
+	EASE_IN_OUT = "EaseInOut":: "EaseInOut"
 }
 
 export type BlendCurve = "Cut" | "Linear" | "EaseIn" | "EaseOut" | "EaseInOut"
@@ -40,6 +40,7 @@ export type Blend = {
 	@class BlendStack
 ]=]
 local BlendStack = {}
+BlendStack.Curves = EnumCurves
 BlendStack.__index = BlendStack
 
 export type BlendStack = typeof(setmetatable({} :: {
