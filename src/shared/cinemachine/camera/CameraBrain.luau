@@ -6,6 +6,11 @@ local CameraState = require(ReplicatedStorage.shared.cinemachine.camera.CameraSt
 local VirtualCamera = require(ReplicatedStorage.shared.cinemachine.camera.VirtualCamera)
 local Maid = require(ReplicatedStorage.shared.util.misc.Maid)
 
+local ATTRIBUTE_FSTOP = "FStop"
+local ATTRIBUTE_FOCUS_DIST = "FocusDistance"
+local ATTRIBUTE_FOCAL_LENGTH = "FocalLength"
+local ALLOW_CAMERA_SETTINGS_OVERRIDE = true
+
 --[=[
 	@class CameraBrain
 ]=]
@@ -61,6 +66,43 @@ function CameraBrain.init(self: CameraBrain): ()
 	self:setFocalLength(self.focalLength)
 end
 
+function CameraBrain.exposeAttributes(self: CameraBrain): ()
+	local camera = self.camera
+
+	camera:SetAttribute(ATTRIBUTE_FSTOP, self.fStop)
+	camera:SetAttribute(ATTRIBUTE_FOCUS_DIST, self.focusDist)
+	camera:SetAttribute(ATTRIBUTE_FOCAL_LENGTH, self.focalLength)
+
+	self._maid:giveTask(
+		camera:GetAttributeChangedSignal(ATTRIBUTE_FSTOP):Connect(function()
+			local val = camera:GetAttribute(ATTRIBUTE_FSTOP)
+			if val ~= self.fStop then
+				self:setFStop(val)
+			end
+		end)
+	)
+
+	self._maid:giveTask(
+		camera:GetAttributeChangedSignal(ATTRIBUTE_FOCUS_DIST):Connect(function()
+			local val = camera:GetAttribute(ATTRIBUTE_FOCUS_DIST)
+			if val ~= self.focusDist then
+				self:setFocusDistance(val)
+			end
+		end)
+	)
+
+	self._maid:giveTask(
+		camera:GetAttributeChangedSignal(ATTRIBUTE_FOCAL_LENGTH):Connect(function()
+			local val = camera:GetAttribute(ATTRIBUTE_FOCAL_LENGTH)
+			print(val, self.focalLength)
+			if val ~= self.focalLength then
+				print(val)
+				self:setFocalLength(val)
+			end
+		end)
+	)
+end
+
 --
 
 function CameraBrain.setActiveCamera(
@@ -73,13 +115,26 @@ function CameraBrain.setActiveCamera(
 end
 
 function CameraBrain.update(self: CameraBrain, deltaTime: number): ()
+	debug.profilebegin("CameraBrain.update")
 	local state = self._blendStack:update(deltaTime)
 
 	self.camera.CFrame = CFrame.new(state.position) * state.rotation.Rotation
 
-	self:setFocalLength(state.focalLength)
-	self:setFocusDistance(state.focusDist)
-	self:setFStop(state.fStop)
+	if ALLOW_CAMERA_SETTINGS_OVERRIDE then
+		if state.focalLength ~= self.focalLength then
+		self:setFocalLength(state.focalLength)
+		end
+		
+		if state.focusDist ~= self.focalLength then
+			self:setFocusDistance(state.focusDist)
+		end
+
+		if state.fStop ~= self.fStop then
+			self:setFStop(state.fStop)
+		end
+	end
+
+	debug.profileend()
 end
 
 --
@@ -94,6 +149,7 @@ function CameraBrain.setFocalLength(self: CameraBrain, fl: number): ()
 	self.focalLength = fl
 	self.camera.FieldOfView = math.deg(fovRadians)
 	self:setFStop()
+	self.camera:SetAttribute(ATTRIBUTE_FOCAL_LENGTH, fl)
 end
 
 function CameraBrain.setFocusDistance(self: CameraBrain, distance: number): ()
@@ -103,6 +159,7 @@ function CameraBrain.setFocusDistance(self: CameraBrain, distance: number): ()
 
 	self.focusDist = distance
 	self:setFStop()
+	self.camera:SetAttribute(ATTRIBUTE_FOCUS_DIST, distance)
 end
 
 function CameraBrain.setFStop(self: CameraBrain, fStop: number?): ()
@@ -132,6 +189,8 @@ function CameraBrain.setFStop(self: CameraBrain, fStop: number?): ()
 	-- min size should be 21
 	bloom.Intensity = bloomBase * intensityAdjust
 	bloom.Size = 21 + (100 * (1 / currentFStop - 1 / 16))
+
+	self.camera:SetAttribute(ATTRIBUTE_FSTOP, currentFStop)
 end 
 
 --
