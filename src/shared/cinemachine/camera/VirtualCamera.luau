@@ -4,7 +4,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CameraState = require(ReplicatedStorage.shared.cinemachine.camera.CameraState)
 local PipelineComponent = require(ReplicatedStorage.shared.cinemachine.camera.PipelineComponent)
 
-local STAGE_ORDER: { PipelineComponent.Stage } = { "Body", "Aim", "Noise", "Finalize" }
+local STAGE_ORDER: { PipelineComponent.Stage } = {
+	PipelineComponent.Stage.BODY,
+	PipelineComponent.Stage.AIM,
+	PipelineComponent.Stage.NOISE,
+	PipelineComponent.Stage.FINALIZE
+}
 
 --[=[
 	@class VirtualCamera
