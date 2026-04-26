@@ -7,9 +7,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local StarterPlayer = game:GetService("StarterPlayer")
+local BlendStack = require(ReplicatedStorage.shared.cinemachine.camera.BlendStack)
 local CameraBrain = require(ReplicatedStorage.shared.cinemachine.camera.CameraBrain)
 local DialogueController = require(StarterPlayer.StarterPlayerScripts.client.modules.ui.dialogue.DialogueController)
 local VirtualCamera = require(ReplicatedStorage.shared.cinemachine.camera.VirtualCamera)
+local CameraSettingsOverride = require(ReplicatedStorage.shared.cinemachine.camera.components.CameraSettingsOverride)
 local HandheldNoise = require(ReplicatedStorage.shared.cinemachine.camera.components.HandheldNoise)
 local MutableTextComponent = require(ReplicatedStorage.shared.network.chat.MutableTextComponent)
 local TextColor = require(ReplicatedStorage.shared.network.chat.TextColor)
@@ -213,6 +215,7 @@ local brain = CameraBrain.new(
 	{ dof = iDof, bloom = bloom }
 )
 brain:init()
+brain:exposeAttributes()
 
 local virtualCameras: { [string]: VirtualCamera.VirtualCamera } = {}
 
@@ -238,6 +241,20 @@ local function setupCam(inst: Instance): ()
 
 	-- every cam in this scene gets the same breathing shake
 	vCam:addComponent(shakeComponent)
+
+	if inst.Name == "Cam6" then
+		vCam:addComponent(CameraSettingsOverride.new({
+			focalLength = 20,
+			focusDist = 1.3,
+			fStop = 1.6
+		}))
+	elseif inst.Name == "Cam7" then
+		vCam:addComponent(CameraSettingsOverride.new({
+			focalLength = 20,
+			focusDist = 11,
+			fStop = 16
+		}))
+	end
 
 	inst.Transparency = 1
 	virtualCameras[inst.Name] = vCam
@@ -307,3 +324,17 @@ switchTo("Cam2")
 task.wait(3)
 
 switchTo("Cam3")
+
+task.wait(3)
+
+switchTo("Cam4")
+
+brain:setActiveCamera(virtualCameras["Cam5"], 10, BlendStack.Curves.EASE_IN_OUT)
+
+task.wait(12)
+
+switchTo("Cam6")
+
+task.wait(2)
+
+brain:setActiveCamera(virtualCameras["Cam7"], 3, BlendStack.Curves.EASE_IN_OUT)
