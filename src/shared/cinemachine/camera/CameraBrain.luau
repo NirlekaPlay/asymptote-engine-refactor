@@ -9,6 +9,7 @@ local Maid = require(ReplicatedStorage.shared.util.misc.Maid)
 local ATTRIBUTE_FSTOP = "FStop"
 local ATTRIBUTE_FOCUS_DIST = "FocusDistance"
 local ATTRIBUTE_FOCAL_LENGTH = "FocalLength"
+local ATTRIBUTE_ALLOW_OVERRIDE = "AllowOverride"
 local ALLOW_CAMERA_SETTINGS_OVERRIDE = true
 
 --[=[
@@ -72,6 +73,7 @@ function CameraBrain.exposeAttributes(self: CameraBrain): ()
 	camera:SetAttribute(ATTRIBUTE_FSTOP, self.fStop)
 	camera:SetAttribute(ATTRIBUTE_FOCUS_DIST, self.focusDist)
 	camera:SetAttribute(ATTRIBUTE_FOCAL_LENGTH, self.focalLength)
+	camera:SetAttribute(ATTRIBUTE_ALLOW_OVERRIDE, ALLOW_CAMERA_SETTINGS_OVERRIDE)
 
 	self._maid:giveTask(
 		camera:GetAttributeChangedSignal(ATTRIBUTE_FSTOP):Connect(function()
@@ -99,6 +101,13 @@ function CameraBrain.exposeAttributes(self: CameraBrain): ()
 				print(val)
 				self:setFocalLength(val)
 			end
+		end)
+	)
+
+	self._maid:giveTask(
+		camera:GetAttributeChangedSignal(ATTRIBUTE_ALLOW_OVERRIDE):Connect(function()
+			local val = camera:GetAttribute(ATTRIBUTE_ALLOW_OVERRIDE)
+			ALLOW_CAMERA_SETTINGS_OVERRIDE = val
 		end)
 	)
 end

@@ -254,6 +254,12 @@ local function setupCam(inst: Instance): ()
 			focusDist = 11,
 			fStop = 16
 		}))
+	elseif inst.Name == "Cam11" then
+		vCam:addComponent(CameraSettingsOverride.new({
+			focalLength = 20,
+			focusDist = 13.11,
+			fStop = 0.8
+		}))
 	end
 
 	inst.Transparency = 1
@@ -314,7 +320,75 @@ DialogueController.typeOutDialogueSequences({
 				Text = "'Why'? What do you mean?'"
 			}
 		}
-	}
+	},
+	{
+		SpeakerId = "Operator",
+		Dialogues = {
+			{
+				InitialDelay = 2,
+				Text = "It's just that..."
+			},
+			{
+				InitialDelay = 3,
+				Text = "After we killed Dennis..."
+			},
+			{
+				InitialDelay = 2,
+				Text = "I've been thingking"
+			},
+			{
+				InitialDelay = 3.5,
+				Text = "Why did I picked this job? The tier four?"
+			},
+			{
+				InitialDelay = 3,
+				Text = "I've had all of my memories wiped"
+			},
+			{
+				InitialDelay = 3,
+				Text = "What kind of person would pick such a job?"
+			}
+		}
+	},
+	{
+		SpeakerId = "Alice",
+		Dialogues = {
+			{
+				InitialDelay = 4,
+				Text = "I am just your handler, Operator."
+			},
+			{
+				InitialDelay = 1.5,
+				Text = "I do not have access to your interviews or any paperwork that leads you here."
+			},
+			{
+				InitialDelay = 2,
+				Text = "… Why do you want to know all of a sudden?"
+			}
+		}
+	},
+	{
+		SpeakerId = "Operator",
+		Dialogues = {
+			{
+				InitialDelay = 2,
+				Text = "I need to find or at least try to remember my memories, Alice. Can you help?"
+			}
+		}
+	},
+	{
+		SpeakerId = "Alice",
+		Dialogues = {
+			{
+				InitialDelay = 2,
+				Text = "*sigh* I don't know how the Council will think of this"
+			},
+			{
+				InitialDelay = 1.5,
+				Text = "but sure. I'll help."
+			}
+		}
+	},
 }, false)
 
 task.wait(5.8) -- problem found. we need to manually do this shit cuz the dialogue plays asynchornously
@@ -338,3 +412,20 @@ switchTo("Cam6")
 task.wait(2)
 
 brain:setActiveCamera(virtualCameras["Cam7"], 3, BlendStack.Curves.EASE_IN_OUT)
+
+task.wait(5)
+
+brain:setActiveCamera(virtualCameras["Cam8"], 0)
+
+task.wait(1.5)
+
+brain:setActiveCamera(virtualCameras["Cam9"], 4, BlendStack.Curves.EASE_IN_OUT)
+
+task.wait(8)
+
+brain:setActiveCamera(virtualCameras["Cam10"], 0)
+
+task.wait(15)
+
+brain:setActiveCamera(virtualCameras["Cam11"], 0)
+
