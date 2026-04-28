@@ -47,6 +47,8 @@ function Maid.doCleaning(self: Maid): ()
 			end
 		elseif type(task) == "function" then
 			(task :: (...any) -> (...any))()
+		elseif getmetatable(task) == Maid then
+			task:doCleaning()
 		end
 	end
 end
