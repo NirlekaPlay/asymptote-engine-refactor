@@ -16,7 +16,14 @@ local HandheldNoise = require(ReplicatedStorage.shared.cinemachine.camera.compon
 local MutableTextComponent = require(ReplicatedStorage.shared.network.chat.MutableTextComponent)
 local TextColor = require(ReplicatedStorage.shared.network.chat.TextColor)
 local TextStyle = require(ReplicatedStorage.shared.network.chat.TextStyle)
+local CharacterFaceService = require(ReplicatedStorage.shared.world.entity.face.CharacterFaceService)
 require(StarterPlayer.StarterPlayerScripts.client.modules.ui.screens.ObjectivesScreen)
+
+CharacterFaceService.init()
+
+if true then
+	return
+end
 
 -- STUDIO UTILS:
 

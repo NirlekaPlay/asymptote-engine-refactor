@@ -8,6 +8,7 @@ local DebugPacketTypes = require(ReplicatedStorage.shared.network.DebugPacketTyp
 local DebugPackets = require(ReplicatedStorage.shared.network.DebugPackets)
 local TypedRemotes = require(ReplicatedStorage.shared.network.remotes.TypedRemotes)
 local Maid = require(ReplicatedStorage.shared.util.misc.Maid)
+local CharacterFaceService = require(ReplicatedStorage.shared.world.entity.face.CharacterFaceService)
 local Level = require(ServerScriptService.server.world.level.Level)
 local LevelLoader = require(ServerScriptService.server.world.level.LevelLoader)
 local Clutter = require(ServerScriptService.server.world.level.scene.props.Clutter)
@@ -19,6 +20,7 @@ local playerMaids: { [Player]: Maid.Maid } = {}
 
 local function main(): ()
 	CollisionGroupManager.register()
+	CharacterFaceService.init()
 	Clutter.initialize()
 end
 

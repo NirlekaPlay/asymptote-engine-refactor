@@ -1,9 +1,9 @@
 --!strict
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
-
-local FaceControl = require(ServerScriptService.server.world.entity.ai.control.FaceControl)
-local BubbleChatControl = require(script.Parent.BubbleChatControl)
+local BubbleChatControl = require(ServerScriptService.server.world.entity.ai.control.BubbleChatControl)
+local ServerFaceControl = require(ReplicatedStorage.shared.world.entity.face.ServerFaceControl)
 
 local EPSILON = 0.01
 local WORDS_PER_MINUTE = 160
@@ -37,7 +37,7 @@ TalkControl.__index = TalkControl
 export type TalkControl = typeof(setmetatable({} :: {
 	character: Model,
 	bubbleChatControl: BubbleChatControl, -- TODO: This is dumb.
-	faceControl: FaceControl.FaceControl,
+	faceControl: ServerFaceControl.ServerFaceControl,
 	talkThread: thread?,
 	_diedConnection: RBXScriptConnection?
 }, TalkControl))
@@ -52,7 +52,7 @@ type DialogueSegment = {
 
 type BubbleChatControl = BubbleChatControl.BubbleChatControl
 
-function TalkControl.new(character: Model, bubControl: BubbleChatControl, faceControl: FaceControl.FaceControl): TalkControl
+function TalkControl.new(character: Model, bubControl: BubbleChatControl, faceControl: ServerFaceControl.ServerFaceControl): TalkControl
 	return setmetatable({
 		character = character,
 		bubbleChatControl = bubControl,
@@ -199,7 +199,7 @@ local function calculateDuration(text: string): number
 	return (wordCount / WORDS_PER_MINUTE) * 60
 end
 
-function TalkControl.performLipSync(faceControl: FaceControl.FaceControl, text: string)
+function TalkControl.performLipSync(faceControl: ServerFaceControl.ServerFaceControl, text: string)
 	local phonemes = textToPhonemes(text)
 	if #phonemes == 0 then return end
 	
