@@ -4,7 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local GuardGenericDialogues = require(ReplicatedStorage.shared.dialogue.GuardGenericDialogues)
-local PlayerStatusTypes = require(ReplicatedStorage.shared.player.PlayerStatusTypes)
+local PlayerStatusTypes = require(ReplicatedStorage.shared.world.stealth.playerstatus.PlayerStatusTypes)
 local ReportType = require(ReplicatedStorage.shared.world.stealth.report.ReportType)
 local Agent = require(ServerScriptService.server.world.entity.npc.Agent)
 local DetectionAgent = require(ServerScriptService.server.DetectionAgent)

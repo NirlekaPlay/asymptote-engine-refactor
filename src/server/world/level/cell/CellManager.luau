@@ -6,8 +6,8 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local PlayerStatusRegistry = require(ServerScriptService.server.player.PlayerStatusRegistry)
 local Cell = require(ServerScriptService.server.world.level.cell.Cell)
 local CellConfig = require(ServerScriptService.server.world.level.cell.CellConfig)
-local PlayerStatus = require(ReplicatedStorage.shared.player.PlayerStatus)
-local PlayerStatusTypes = require(ReplicatedStorage.shared.player.PlayerStatusTypes)
+local PlayerStatus = require(ReplicatedStorage.shared.world.stealth.playerstatus.PlayerStatus)
+local PlayerStatusTypes = require(ReplicatedStorage.shared.world.stealth.playerstatus.PlayerStatusTypes)
 
 --[=[
 	@class CellManager

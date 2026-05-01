@@ -1,7 +1,7 @@
 --!strict
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local PlayerStatus = require(ReplicatedStorage.shared.player.PlayerStatus)
+local PlayerStatus = require(ReplicatedStorage.shared.world.stealth.playerstatus.PlayerStatus)
 
 local PlayerStatusTypes = {
 	DISGUISED = PlayerStatus.new("DISGUISED", 2, true, 0.625),

@@ -5,8 +5,8 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local PlayerStatusRegistry = require(ServerScriptService.server.player.PlayerStatusRegistry)
 local WorldInteractionPrompt = require(ServerScriptService.server.world.level.interaction.WorldInteractionPrompt)
 local SceneAccessor = require(ServerScriptService.server.world.level.scene.SceneAccessor)
-local PlayerStatus = require(ReplicatedStorage.shared.player.PlayerStatus)
-local PlayerStatusTypes = require(ReplicatedStorage.shared.player.PlayerStatusTypes)
+local PlayerStatus = require(ReplicatedStorage.shared.world.stealth.playerstatus.PlayerStatus)
+local PlayerStatusTypes = require(ReplicatedStorage.shared.world.stealth.playerstatus.PlayerStatusTypes)
 local TriggerAttributes = require(ReplicatedStorage.shared.world.interaction.TriggerAttributes)
 
 local ENUM_HOLD_STATUS = {
