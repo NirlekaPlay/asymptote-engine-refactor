@@ -92,6 +92,10 @@ function VisibleEntitiesSensor.isInVision(self: VisibleEntitiesSensor, agent: Ag
 		return false
 	end
 
+	if entityInstance == agent:getWorldInstance() then
+		return false
+	end
+
 	local diff = entityPos - agentPos
 	local dist = diff.Magnitude
 	if dist > agent:getSightRadius() then

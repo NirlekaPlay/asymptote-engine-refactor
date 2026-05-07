@@ -1,6 +1,7 @@
 --!strict
 
 local ServerScriptService = game:GetService("ServerScriptService")
+local Entity = require(ServerScriptService.server.world.entity.Entity)
 local MissionSetup = require(ServerScriptService.server.world.level.mission.reading.MissionSetup)
 
 export type SceneAccessor = {
@@ -10,7 +11,9 @@ export type SceneAccessor = {
 	getState: (self: SceneAccessor, state: string) -> any,
 	subscribeExpressionChange: (self: SceneAccessor, expressionStr: string, callback: (any) -> ()) -> () -> (),
 	getLocalizedStrings: (self: SceneAccessor) -> { [string]: string },
-	getSceneConfig: (self: SceneAccessor) -> MissionSetup.MissionSetup
+	getSceneConfig: (self: SceneAccessor) -> MissionSetup.MissionSetup,
+	--
+	addFreshEntity: (self: SceneAccessor, entity: Entity.Entity) -> ()
 }
 
 return nil
