@@ -56,6 +56,7 @@ function AbstractNpc.new(scene, character: Model & { Humanoid: Humanoid, Humanoi
 	self.bodyRotationControl = BodyRotationControl.new(character, self.pathNavigation)
 	self.faceControl = CharacterFaceService.register(character)
 	self.faceControl:setFace("Neutral")
+	self.ragdollControl = RagdollControl.new(character)
 	self.typeId = "npc"
 	self.humanoid = (character :: any).Humanoid :: Humanoid
 	self.random = Random.new( )
@@ -100,6 +101,10 @@ function AbstractNpc.new(scene, character: Model & { Humanoid: Humanoid, Humanoi
 
 	self._maid:giveTask(character.HumanoidRootPart:GetPropertyChangedSignal("Position"):Connect(function()
 		self.levelCallback:onMove()
+	end))
+
+	self._maid:giveTask(humanoid.Died:Once(function()
+		self:remove(Entity.RemovalReason.KILLED)
 	end))
 
 	self._maid:giveTask(descendantAddedConnection)
@@ -293,6 +298,8 @@ end
 
 function AbstractNpc.onRemove(self): ()
 	self._maid:doCleaning()
+	self._animator:stopAll()
+	self:getFaceControl():setFace("Unconscious")
 end
 
 return AbstractNpc

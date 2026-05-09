@@ -44,6 +44,13 @@ function HumanoidAnimator.new(humanoid: Humanoid): HumanoidAnimator
 	}, HumanoidAnimator)
 end
 
+function HumanoidAnimator.stopAll(self: HumanoidAnimator, transitionTime: number?)
+	local t = transitionTime or 0.2
+	self._overlay._player:stop(t)
+	self._overlay._current = nil -- clear tracked state so setOverlay wont no-op next call
+	self._locomotion:setPaused(true)
+end
+
 function HumanoidAnimator.update(self: HumanoidAnimator, anim: AnimationParams, overlay: OverlayState)
 	-- resolve overlay priority: stunned > reporting > guarding > none
 	local activeOverlay: string? = nil

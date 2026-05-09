@@ -122,7 +122,7 @@ function RagdollControl.replaceJoints(self: RagdollControl): ()
 			continue
 		end
 
-		if not ATTATCHMENT_CFRAMES[motor.Name] then return end
+		if not ATTATCHMENT_CFRAMES[motor.Name] then continue end
 
 		motor.Enabled = false;
 		local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
