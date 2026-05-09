@@ -6,6 +6,9 @@ local DetectionAgent = require(ServerScriptService.server.world.entity.ai.detect
 local DetectionTracker = require(ServerScriptService.server.world.entity.ai.detection.DetectionTracker)
 
 local DECAY_RATE_PER_SEC = 0.01 / 0.045 -- ≈ 0.222 (Sec. 1(d) of Plan doc.)
+local QUICK_DETECTION_RANGE = 10
+local QUIK_DETECTION_MULTIPLIER = 3.33
+local BASE_DETECTION_TIME = 1.25
 
 --[=[
 	@class DetectionManager
@@ -126,23 +129,14 @@ function DetectionManager.calculateSpeed(self: DetectionManager, entity: Detecta
 	-- 1. Get the base multiplier from the entity's status
 	-- (Replacing the old STATUS_PRIORITIES and SPEED_MULTIPLIERS lookup)
 	local speedMultiplier = entity:getDetectionMultiplier() 
-
-	-- 2. "Quick Detection" Logic (From old line ~344)
-	local QUICK_DETECTION_RANGE = 10
-	local QUIK_DETECTION_MULTIPLIER = 3.33
 	
 	if distance <= QUICK_DETECTION_RANGE then
 		speedMultiplier *= QUIK_DETECTION_MULTIPLIER
 	end
 
-	-- 3. Movement/WalkSpeed Multiplier (From old line ~333)
-	-- If it's a player, we scale detection based on how fast they are moving
-	local movementMult = entity:getMovementMultiplier() -- Should return 1.0 for static, or math.map for players
+	local movementMult = entity:getMovementMultiplier()
 	speedMultiplier *= movementMult
-
-	-- 4. Final Rate calculation (From old line ~350)
-	-- BASE_DETECTION_TIME = 1.25
-	local progressRate = (1 / 1.25) * speedMultiplier
+	local progressRate = (1 / BASE_DETECTION_TIME) * speedMultiplier
 	
 	return progressRate
 end

@@ -5,6 +5,7 @@ export type DetectableEntity = {
 	getPosition: (self: DetectableEntity) -> Vector3,
 	getBasePriority: (self: DetectableEntity) -> number,
 	getPriority: (self: DetectableEntity) -> number,
+	getBaseDetectionRadius: (self: DetectableEntity) -> number,
 	getDetectionMultiplier: (self: DetectableEntity) -> number,
 	getMovementMultiplier: (self: DetectableEntity) -> number
 }
