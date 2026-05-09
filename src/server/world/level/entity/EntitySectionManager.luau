@@ -32,6 +32,7 @@ EntitySectionManager.__index = EntitySectionManager
 export type EntitySectionManager = typeof(setmetatable({} :: {
 	sections: Map<SectionKey, Set<Entity>>,
 	entityToSection: Map<Entity, SectionKey>,
+	uuidToEntity: Map<string, Entity>,
 	callback: Callback,
 	levelCallback: LevelCallback
 }, EntitySectionManager))
@@ -52,6 +53,7 @@ function EntitySectionManager.new(levelCallback: LevelCallback): EntitySectionMa
 	local this = setmetatable({
 		sections = {},
 		entityToSection = {},
+		uuidToEntity = {},
 		levelCallback = levelCallback
 	}, EntitySectionManager)
 
@@ -156,6 +158,7 @@ function EntitySectionManager.addEntity(self: EntitySectionManager, entity: Enti
 
 	self.sections[key][entity] = true
 	self.entityToSection[entity] = key
+	self.uuidToEntity[entity:getUuid()] = entity
 
 	entity:setLevelCallback(self.callback.new(entity, key))
 	self:startTicking(entity)
@@ -179,8 +182,13 @@ function EntitySectionManager.removeEntity(self: EntitySectionManager, entity: E
 		end
 
 		self.entityToSection[entity] = nil
+		self.uuidToEntity[entity:getUuid()] = entity
 		self:stopTicking(entity)
 	end
+end
+
+function EntitySectionManager.getEntityByUuid(self: EntitySectionManager, uuid: string): Entity?
+	return self.uuidToEntity[uuid]
 end
 
 function EntitySectionManager.updateEntityPosition(self: EntitySectionManager, entity: Entity): ()

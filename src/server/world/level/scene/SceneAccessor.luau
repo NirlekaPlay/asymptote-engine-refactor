@@ -13,7 +13,8 @@ export type SceneAccessor = {
 	getLocalizedStrings: (self: SceneAccessor) -> { [string]: string },
 	getSceneConfig: (self: SceneAccessor) -> MissionSetup.MissionSetup,
 	--
-	addFreshEntity: (self: SceneAccessor, entity: Entity.Entity) -> ()
+	addFreshEntity: (self: SceneAccessor, entity: Entity.Entity) -> (),
+	getEntityByUuid: (self: SceneAccessor, uuid: string) -> Entity.Entity
 }
 
 return nil

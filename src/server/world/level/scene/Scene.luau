@@ -79,6 +79,10 @@ function Scene.getEntitiesInRadius(self: Scene, origin: Vector3, radius: number)
 	return self.entityManager:getEntitiesInRange(origin, 0, radius)
 end
 
+function Scene.getEntityByUuid(self: Scene, uuid: string): Entity?
+	return self.entityManager:getEntityByUuid(uuid)
+end
+
 --
 
 function Scene.getRandom(self: Scene): Random
