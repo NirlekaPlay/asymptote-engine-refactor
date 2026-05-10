@@ -53,8 +53,9 @@ function VisibleEntitiesSensor.doUpdate(self: VisibleEntitiesSensor, agent: Agen
 	local visibleEntities: { [string]: true } = {}
 	local visiblePlayers: { [string]: true } = {}
 	local visibleC4: { [string]: true } = {}
+	local entitiesInRadius = agent:getScene():getEntitiesInRadius(agent:getPosition(), agent:getSightRadius())
 
-	for entityUID, entity in agent:getScene():getEntitiesInRadius(agent:getPosition(), agent:getSightRadius()) do
+	for _, entity in entitiesInRadius do
 		local isInVision = self:isInVision(agent, entity)
 		if not isInVision then
 			continue

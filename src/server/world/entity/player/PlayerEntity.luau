@@ -5,6 +5,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Maid = require(ReplicatedStorage.shared.util.misc.Maid)
 local Entity = require(ServerScriptService.server.world.entity.Entity)
 local Brain = require(ServerScriptService.server.world.entity.ai.Brain)
+local DetectableEntityComponent = require(ServerScriptService.server.world.entity.ai.detection.entity.DetectableEntityComponent)
 local EntityInLevelCallback = require(ServerScriptService.server.world.level.entity.EntityInLevelCallback)
 local Scene = require(ServerScriptService.server.world.level.scene.Scene)
 
@@ -29,9 +30,22 @@ function PlayerEntity.new(scene, character: Model & { Humanoid: Humanoid, Humano
 	self.uuid = "UNSET"
 	self._maid = Maid.new()
 
-	self._maid:giveTask(character.HumanoidRootPart:GetPropertyChangedSignal("Position"):Connect(function()
-		self.levelCallback:onMove()
-	end))
+	self.detectableComponent = DetectableEntityComponent.new(
+		self.uuid,
+		function()
+			return self.character.HumanoidRootPart.Position
+		end,
+		{
+			detectionRadius = function()
+				return 50
+			end,
+			basePriority = 1.0,
+			getMovementMultiplier = function()
+				local vel = self.character.HumanoidRootPart.AssemblyLinearVelocity.Magnitude
+				return 1 + (vel / 16)
+			end,
+		}
+	)
 
 	self._maid:giveTask(self.humanoid.Died:Once(function()
 		self:remove(Entity.RemovalReason.KILLED)
@@ -49,7 +63,15 @@ end
 --
 
 function PlayerEntity.update(self, deltaTime: number): ()
-	return
+	-- Fuck you Roblox.
+
+	local currentPos = self:getPosition()
+	local lastPos = self.lastPos
+	if currentPos ~= lastPos then
+		self.levelCallback:onMove()
+	end
+
+	lastPos = currentPos
 end
 
 function PlayerEntity.getPosition(self): Vector3

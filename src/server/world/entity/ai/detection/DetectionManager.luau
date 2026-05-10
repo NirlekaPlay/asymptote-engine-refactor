@@ -32,11 +32,9 @@ function DetectionManager.new(agent: DetectionAgent.DetectionAgent): DetectionMa
 	}, DetectionManager)
 end
 
-function DetectionManager.processPerception(self: DetectionManager, perceived: {DetectableEntity.DetectableEntity}, deltaTime: number): ()
+function DetectionManager.processPerception(self: DetectionManager, perceived: {DetectableEntity.DetectableEntity}, deltaTime: number)
 	local seenThisFrame: { [DetectableEntity.DetectableEntity]: boolean } = {}
 	
-	-- 1. Identify the "Priority Floor"
-	-- "If an Agent fully detects an entity, any lower priority entities are ignored."
 	local priorityFloor = 0
 	for entity, tracker in self.trackers do
 		if tracker.value >= 1 then
@@ -44,37 +42,31 @@ function DetectionManager.processPerception(self: DetectionManager, perceived: {
 		end
 	end
 
-	for _, entity in perceived do
-		local priority = entity:getPriority()
-		
-		-- Lead's Rule: Ignore lower priority than what's already fully detected
+	for _, detectable in perceived do
+		local dist = (self.agent:getPosition() - detectable:getPosition()).Magnitude
+		if dist > detectable:getBaseDetectionRadius() then
+			continue
+		end
+
+		local priority = detectable:getPriority()
 		if priority < priorityFloor then
 			continue
 		end
 
-		-- Note: If priority >= priorityFloor, we process it. 
-		-- This satisfies: "if another... has a status of higher priority, it will detect on that too."
-		
-		local tracker = self:getOrCreateTracker(entity)
-		
-		-- Logic Transfer: The tracker is tied to the Entity instance. 
-		-- If the entity changes status (e.g. from 'Suspicious' to 'Armed'), 
-		-- it simply returns a higher value from calculateSpeed(). 
-		-- The 'value' (0-1) persists, effectively "transferring" the detection progress.
-		
-		local distance = (self.agent:getPosition() - entity:getPosition()).Magnitude
-		local speed = self:calculateSpeed(entity, distance)
-		
+		local tracker = self:getOrCreateTracker(detectable)
+		local speed = self:calculateSpeed(detectable, dist)
 		tracker:increase(speed * deltaTime)
-		seenThisFrame[entity] = true
+		seenThisFrame[detectable] = true
 	end
 
-	-- 2. Decay logic for entities no longer seen
 	for entity, tracker in self.trackers do
 		if not seenThisFrame[entity] then
+			if tracker.value >= 1 then
+				continue
+			end
 			tracker:decay(DECAY_RATE_PER_SEC, deltaTime)
-			if tracker.value <= 0 then 
-				self.trackers[entity] = nil 
+			if tracker.value <= 0 then
+				self.trackers[entity] = nil
 			end
 		end
 	end

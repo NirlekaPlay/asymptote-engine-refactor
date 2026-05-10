@@ -26,10 +26,12 @@ end
 function DetectionTracker.increase(self: any, amount: number): ()
 	self.value = math.clamp(self.value + amount, 0, 1)
 	self.lastSeenAt = os.clock()
+	print(self.value)
 end
 
 function DetectionTracker.decay(self: any, rate: number, dt: number): ()
 	self.value = math.max(0, self.value - (rate * dt))
+	print(self.value)
 end
 
 return DetectionTracker

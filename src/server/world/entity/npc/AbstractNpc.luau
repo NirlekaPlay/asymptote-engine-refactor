@@ -11,6 +11,7 @@ local Brain = require(ServerScriptService.server.world.entity.ai.Brain)
 local BodyRotationControl = require(ServerScriptService.server.world.entity.ai.control.BodyRotationControl)
 local MoveControl = require(ServerScriptService.server.world.entity.ai.control.MoveControl)
 local RagdollControl = require(ServerScriptService.server.world.entity.ai.control.RagdollControl)
+local DetectionManager = require(ServerScriptService.server.world.entity.ai.detection.DetectionManager)
 local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.memory.MemoryModuleTypes)
 local PathNavigation = require(ServerScriptService.server.world.entity.ai.navigation.PathNavigation)
 local HumanoidAnimator = require(ServerScriptService.server.world.entity.animation.HumanoidAnimator)
@@ -62,6 +63,10 @@ function AbstractNpc.new(scene, character: Model & { Humanoid: Humanoid, Humanoi
 	self.random = Random.new( )
 	self._maid = Maid.new()
 
+	-- Detection
+
+	self.detectionManager = DetectionManager.new(self)
+
 	-- Animations
 
 	self._animParams = {
@@ -99,10 +104,6 @@ function AbstractNpc.new(scene, character: Model & { Humanoid: Humanoid, Humanoi
 		end
 	end)
 
-	self._maid:giveTask(character.HumanoidRootPart:GetPropertyChangedSignal("Position"):Connect(function()
-		self.levelCallback:onMove()
-	end))
-
 	self._maid:giveTask(humanoid.Died:Once(function()
 		self:remove(Entity.RemovalReason.KILLED)
 	end))
@@ -139,10 +140,34 @@ end
 function AbstractNpc.update(self, deltaTime: number): ()
 	debug.profilebegin("Npc.update")
 
+	debug.profilebegin("npc position update")
+	-- Fuck you Roblox.
+
+	local currentPos = self:getPosition()
+	local lastPos = self.lastPos
+	if currentPos ~= lastPos then
+		self.levelCallback:onMove()
+	end
+
+	lastPos = currentPos
+	debug.profileend()
+
 	debug.profilebegin("brain")
 	TestNpcAi.updateActivity(self)
 	self.brain:update(deltaTime)
 	self:sendDebugPackets()
+	debug.profileend()
+
+	debug.profilebegin("detection");
+	local detectedEntities = {}
+	local visibleEntities = self.brain:getMemory(MemoryModuleTypes.VISIBLE_ENTITIES):orElse({});
+	for uuid in visibleEntities do
+		local entity = self:getScene():getEntityByUuid(uuid)
+		if entity and entity.detectableComponent then
+			table.insert(detectedEntities, entity.detectableComponent)
+		end
+	end
+	(self.detectionManager :: DetectionManager.DetectionManager):processPerception(detectedEntities, deltaTime);
 	debug.profileend()
 
 	debug.profilebegin("animator")
