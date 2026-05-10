@@ -1,7 +1,9 @@
 --!strict
 
 local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local Draw = require(ReplicatedStorage.shared.thirdparty.Draw)
 local Entity = require(ServerScriptService.server.world.entity.Entity)
 local EntityInLevelCallback = require(ServerScriptService.server.world.level.entity.EntityInLevelCallback)
 local LevelCallback = require(ServerScriptService.server.world.level.entity.LevelCallback)
@@ -9,6 +11,7 @@ local LevelCallback = require(ServerScriptService.server.world.level.entity.Leve
 local math_floor = math.floor
 local next = next
 
+local DEBUG_CELLS_POS = false
 local CLEAR_EMPTY_SECTIONS = false
 local SECTION_SIZE = 16
 local HASH_X = 73856093 -- ref: https://stackoverflow.com/questions/5928725/hashing-2d-3d-and-nd-vectors
@@ -23,6 +26,14 @@ local function getSectionKey(pos: Vector3): number
 	return (sx * HASH_X) + (sy * HASH_Y) + (sz * HASH_Z)
 end
 
+local function getSectionOrigin(pos: Vector3): Vector3
+	return Vector3.new(
+		math_floor(pos.X / SECTION_SIZE) * SECTION_SIZE,
+		math_floor(pos.Y / SECTION_SIZE) * SECTION_SIZE,
+		math_floor(pos.Z / SECTION_SIZE) * SECTION_SIZE
+	)
+end
+
 --[=[
 	@class EntitySectionManager
 ]=]
@@ -31,6 +42,7 @@ EntitySectionManager.__index = EntitySectionManager
 
 export type EntitySectionManager = typeof(setmetatable({} :: {
 	sections: Map<SectionKey, Set<Entity>>,
+	_sectionsOrigins: Map<SectionKey, Vector3>,
 	entityToSection: Map<Entity, SectionKey>,
 	uuidToEntity: Map<string, Entity>,
 	callback: Callback,
@@ -54,7 +66,8 @@ function EntitySectionManager.new(levelCallback: LevelCallback): EntitySectionMa
 		sections = {},
 		entityToSection = {},
 		uuidToEntity = {},
-		levelCallback = levelCallback
+		levelCallback = levelCallback,
+		_sectionsOrigins = if DEBUG_CELLS_POS then {} else nil
 	}, EntitySectionManager)
 
 	--
@@ -150,10 +163,14 @@ end
 
 function EntitySectionManager.addEntity(self: EntitySectionManager, entity: Entity): ()
 	(entity :: any).uuid = HttpService:GenerateGUID(false) -- TODO: SHOULD BE HANDLED ELSEWHERE!!!
-	local key = getSectionKey(entity:getPosition())
+	local pos = entity:getPosition()
+	local key = getSectionKey(pos)
 	
 	if not self.sections[key] then
 		self.sections[key] = {}
+		if DEBUG_CELLS_POS then
+			self._sectionsOrigins[key] = getSectionOrigin(pos)
+		end
 	end
 
 	self.sections[key][entity] = true
@@ -162,6 +179,10 @@ function EntitySectionManager.addEntity(self: EntitySectionManager, entity: Enti
 
 	entity:setLevelCallback(self.callback.new(entity, key))
 	self:startTicking(entity)
+
+	if DEBUG_CELLS_POS then
+		self:_debugDisplayActiveCells()
+	end
 end
 
 function EntitySectionManager.removeEntity(self: EntitySectionManager, entity: Entity): ()
@@ -185,6 +206,10 @@ function EntitySectionManager.removeEntity(self: EntitySectionManager, entity: E
 		self.uuidToEntity[entity:getUuid()] = entity
 		self:stopTicking(entity)
 	end
+
+	if DEBUG_CELLS_POS then
+		self:_debugDisplayActiveCells()
+	end
 end
 
 function EntitySectionManager.getEntityByUuid(self: EntitySectionManager, uuid: string): Entity?
@@ -193,16 +218,64 @@ end
 
 function EntitySectionManager.updateEntityPosition(self: EntitySectionManager, entity: Entity): ()
 	local oldKey = self.entityToSection[entity]
-	local newKey = getSectionKey(entity:getPosition())
+	local pos = entity:getPosition()
+	local newKey = getSectionKey(pos)
 
 	if oldKey ~= newKey then
 		self.sections[oldKey][entity] = nil
 
 		if not self.sections[newKey] then
 			self.sections[newKey] = {}
+			if DEBUG_CELLS_POS then
+				self._sectionsOrigins[newKey] = getSectionOrigin(pos)
+			end
 		end
 		self.sections[newKey][entity] = true
 		self.entityToSection[entity] = newKey
+	end
+
+	if DEBUG_CELLS_POS then
+		self:_debugDisplayActiveCells()
+	end
+end
+
+--
+
+function EntitySectionManager._debugDisplayActiveCells(self: EntitySectionManager)
+	local debugFolder = workspace:FindFirstChild("Debug_EntityGrid")
+	if debugFolder then
+		debugFolder:ClearAllChildren()
+	else
+		debugFolder = Instance.new("Folder")
+		debugFolder.Name = "Debug_EntityGrid"
+		debugFolder.Parent = workspace
+	end
+
+	for key, section in self.sections do
+		local entityCount = 0
+		for _ in section do
+			entityCount += 1
+		end
+
+		if entityCount > 0 then
+			local origin = self._sectionsOrigins[key]
+			if not origin then
+				continue
+			end
+
+			local size = Vector3.new(SECTION_SIZE, SECTION_SIZE, SECTION_SIZE)
+			local cframe = CFrame.new(origin + Vector3.new(SECTION_SIZE/2, SECTION_SIZE/2, SECTION_SIZE/2))
+			local name = "DebugCell_" .. tostring(key)
+			local color = Color3.fromHSV((entityCount * 0.1) % 1, 1, 1) -- Shifts color based on density
+
+			local part = Draw.box(cframe, size, color)
+			part.Name = name
+			part.Parent = debugFolder
+
+			local text = "Entities: " .. tostring(entityCount)
+
+			Draw.text(part, text)
+		end
 	end
 end
 
