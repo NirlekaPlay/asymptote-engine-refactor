@@ -2,6 +2,7 @@
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local DetectableEntity = require(ServerScriptService.server.world.entity.ai.detection.entity.DetectableEntity)
+local DetectionContext = require(ServerScriptService.server.world.entity.ai.detection.entity.DetectionContext)
 
 --[=[
 	@class DetectionTracker
@@ -12,15 +13,21 @@ DetectionTracker.__index = DetectionTracker
 export type DetectionTracker = typeof(setmetatable({} :: {
 	source: DetectableEntity.DetectableEntity,
 	value: number,
-	lastSeenAt: number
+	lastSeenAt: number,
+	context: DetectionContext.DetectionContext
 }, DetectionTracker))
 
-function DetectionTracker.new(source: DetectableEntity.DetectableEntity): DetectionTracker
+function DetectionTracker.new(source: DetectableEntity.DetectableEntity, context: DetectionContext.DetectionContext): DetectionTracker
 	return setmetatable({
 		source = source,
 		value = 0.0,
-		lastSeenAt = os.clock()
+		lastSeenAt = os.clock(),
+		context = context
 	}, DetectionTracker)
+end
+
+function DetectionTracker.getContext(self: DetectionTracker): DetectionContext.DetectionContext
+	return self.context
 end
 
 function DetectionTracker.increase(self: any, amount: number): ()

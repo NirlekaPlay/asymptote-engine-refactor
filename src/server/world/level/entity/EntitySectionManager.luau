@@ -162,7 +162,10 @@ end
 --
 
 function EntitySectionManager.addEntity(self: EntitySectionManager, entity: Entity): ()
-	(entity :: any).uuid = HttpService:GenerateGUID(false) -- TODO: SHOULD BE HANDLED ELSEWHERE!!!
+	-- TODO: SHOULD BE HANDLED ELSEWHERE!!!
+	if not (entity :: any).uuid or entity.uuid == "UNSET" then
+		(entity :: any).uuid = HttpService:GenerateGUID(false)
+	end
 	local pos = entity:getPosition()
 	local key = getSectionKey(pos)
 	

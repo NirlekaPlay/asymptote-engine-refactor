@@ -12,6 +12,8 @@ local BodyRotationControl = require(ServerScriptService.server.world.entity.ai.c
 local MoveControl = require(ServerScriptService.server.world.entity.ai.control.MoveControl)
 local RagdollControl = require(ServerScriptService.server.world.entity.ai.control.RagdollControl)
 local DetectionManager = require(ServerScriptService.server.world.entity.ai.detection.DetectionManager)
+local DetectableEntity = require(ServerScriptService.server.world.entity.ai.detection.entity.DetectableEntity)
+local DetectionContext = require(ServerScriptService.server.world.entity.ai.detection.entity.DetectionContext)
 local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.memory.MemoryModuleTypes)
 local PathNavigation = require(ServerScriptService.server.world.entity.ai.navigation.PathNavigation)
 local HumanoidAnimator = require(ServerScriptService.server.world.entity.animation.HumanoidAnimator)
@@ -158,16 +160,49 @@ function AbstractNpc.update(self, deltaTime: number): ()
 	self:sendDebugPackets()
 	debug.profileend()
 
-	debug.profilebegin("detection");
-	local detectedEntities = {}
-	local visibleEntities = self.brain:getMemory(MemoryModuleTypes.VISIBLE_ENTITIES):orElse({});
+	debug.profilebegin("detection")
+	local visibleEntities = self.brain:getMemory(MemoryModuleTypes.VISIBLE_ENTITIES):orElse({})
+	local hearablePlayers = self.brain:getMemory(MemoryModuleTypes.HEARABLE_PLAYERS):orElse({})
+
+	local perceived: { DetectableEntity.DetectableEntity } = {}
+	local contexts: { [string]: DetectionContext.DetectionContext } = {}
+
 	for uuid in visibleEntities do
-		local entity = self:getScene():getEntityByUuid(uuid)
-		if entity and entity.detectableComponent then
-			table.insert(detectedEntities, entity.detectableComponent)
+		local entity = self.scene:getEntityByUuid(uuid)
+		if not entity then
+			continue
 		end
+		local detectable = (entity :: any).detectableComponent
+		if not detectable then
+			continue
+		end
+		table.insert(perceived, detectable)
+		contexts[uuid] = {
+			isVisible = true,
+			isHeard = hearablePlayers[uuid] ~= nil,
+		}
 	end
-	(self.detectionManager :: DetectionManager.DetectionManager):processPerception(detectedEntities, deltaTime);
+
+	for uuid in hearablePlayers do
+		if contexts[uuid] then
+			continue
+		end
+		local entity = self.scene:getEntityByUuid(uuid)
+		if not entity then
+			continue
+		end
+		local detectable = (entity :: any).detectableComponent
+		if not detectable then
+			continue
+		end
+		table.insert(perceived, detectable)
+		contexts[uuid] = {
+			isVisible = false,
+			isHeard = true,
+		}
+	end
+
+	self.detectionManager:processPerception(perceived, contexts, deltaTime)
 	debug.profileend()
 
 	debug.profilebegin("animator")

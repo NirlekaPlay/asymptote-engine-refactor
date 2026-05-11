@@ -35,7 +35,7 @@ end
 
 function PlayerEntityManagerComponent.onPlayerAdded(self: PlayerEntityManagerComponent, player: Player, scene: SceneAccessor): ()
 	self.maid:giveTask(player.CharacterAdded:Connect(function(character)
-		scene:addFreshEntity(PlayerEntity.new(scene, character))
+		scene:addFreshEntity(PlayerEntity.new(scene, tostring(player.UserId), player, character))
 	end))
 end
 
@@ -43,6 +43,13 @@ function PlayerEntityManagerComponent.setup(self: PlayerEntityManagerComponent, 
 	-- TODO: Potential duplication.
 	self.maid:giveTask(Players.PlayerAdded:Connect(function(player: Player)
 		self:onPlayerAdded(player, scene)
+	end))
+
+	self.maid:giveTask(Players.PlayerRemoving:Connect(function(player)
+		local entity = scene:getEntityByUuid(tostring(player.UserId))
+		if entity then
+			entity:remove(Entity.RemovalReason.DISCARDED) -- FUCK OFF
+		end
 	end))
 
 	for _, player in Players:GetPlayers() do
