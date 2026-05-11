@@ -1,6 +1,8 @@
 --!strict
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local Signal = require(ReplicatedStorage.shared.thirdparty.Signal)
 local Entity = require(ServerScriptService.server.world.entity.Entity)
 local CellManager = require(ServerScriptService.server.world.level.cell.CellManager)
 local EntitySectionManager = require(ServerScriptService.server.world.level.entity.EntitySectionManager)
@@ -29,6 +31,10 @@ export type Scene = typeof(setmetatable({} :: {
 	navMesh: NavMesh.NavMesh,
 	sceneConfigObj: MissionSetup.MissionSetup,
 	--
+	afterEvents: {
+		postUpdateEntities: Signal.Signal<>
+	},
+	--
 	random: Random
 }, Scene))
 
@@ -43,7 +49,11 @@ function Scene.new(cells, missionSetup: MissionSetup.MissionSetup): Scene
 		entityTickList = EntityTickList.new(),
 		navMesh = NavMesh.new(),
 		sceneConfigObj = missionSetup,
-		random = Random.new()
+		random = Random.new(),
+		--
+		afterEvents = {
+			postUpdateEntities = Signal.new()
+		}
 	}, Scene)
 
 	--
@@ -155,6 +165,8 @@ function Scene.update(self: Scene, deltaTime: number): ()
 		entity:update(deltaTime)
 	end)
 	debug.profileend()
+
+	self.afterEvents.postUpdateEntities:Fire()
 
 	debug.profilebegin("props")
 

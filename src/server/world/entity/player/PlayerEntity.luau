@@ -29,7 +29,7 @@ function PlayerEntity.new(scene, uuid: string, player: Player, character: Model 
 	--
 
 	self.levelCallback = EntityInLevelCallback.NULL
-	self.typeId = "npc"
+	self.typeId = "player"
 	self.uuid = uuid
 	self._maid = Maid.new()
 
@@ -201,6 +201,12 @@ end
 
 function PlayerEntity.setPosToCFrame(self, cframe: CFrame): ()
 	self.character:PivotTo(cframe)
+end
+
+--
+
+function PlayerEntity.getPlayer(self): Player
+	return self.player
 end
 
 --

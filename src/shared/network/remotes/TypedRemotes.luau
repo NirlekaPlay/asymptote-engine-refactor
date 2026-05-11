@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local AlertLevels = require(ReplicatedStorage.shared.world.stealth.alertlevel.AlertLevels)
 local ClientBoundDialogueConceptsPayload = require(ReplicatedStorage.shared.network.payloads.ClientBoundDialogueConceptsPayload)
 local ClientBoundObjectivesInfoPayload = require(ReplicatedStorage.shared.network.payloads.ClientBoundObjectivesInfoPayload)
+local DetectionPayload = require(ReplicatedStorage.shared.network.payloads.DetectionPayload)
 local TypedRemote = require(ReplicatedStorage.shared.thirdparty.TypedRemote)
 
 local _, RE, URE = TypedRemote.parent()
@@ -16,7 +17,7 @@ type URE<T...> = TypedRemote.UnreliableEvent<T...>
 local playerHeadRotationJointRemote = TypedRemote.unreliableEvent("PlayerHeadRotation")
 
 return {
-	Detection = URE("Detection") :: URE<{DetectionPayload.DetectionData}>,
+	ClientboundDetection = URE("Detection") :: URE<{DetectionPayload.DetectionData}>,
 	BubbleChat = RE("BubbleChat") :: RE<BasePart, string?>,
 	Status = RE("Status") :: RE<{ [string]: true }>,
 	AlertLevel = RE("AlertLevel") :: RE<AlertLevels.AlertLevel>,

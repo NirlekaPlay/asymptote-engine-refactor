@@ -1,6 +1,9 @@
 --!strict
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local DetectionPayload = require(ReplicatedStorage.shared.network.payloads.DetectionPayload)
+local TypedRemotes = require(ReplicatedStorage.shared.network.remotes.TypedRemotes)
 local DetectableEntity = require(ServerScriptService.server.world.entity.ai.detection.entity.DetectableEntity)
 local DetectionAgent = require(ServerScriptService.server.world.entity.ai.detection.DetectionAgent)
 local DetectionTracker = require(ServerScriptService.server.world.entity.ai.detection.DetectionTracker)
@@ -10,6 +13,10 @@ local DECAY_RATE_PER_SEC = 0.01 / 0.045 -- ≈ 0.222 (Sec. 1(d) of Plan doc.)
 local QUICK_DETECTION_RANGE = 10
 local QUIK_DETECTION_MULTIPLIER = 3.33
 local BASE_DETECTION_TIME = 1.25
+
+--
+
+local entityValues: {[Player]: {DetectionPayload.DetectionData}} = {}
 
 --[=[
 	@class DetectionManager
@@ -71,15 +78,19 @@ function DetectionManager.processPerception(
 		seenThisFrame[detectable] = true
 	end
 
+	local agentUuid = self.agent:getUuid()
+	local character = self.agent:getWorldInstance()
+
 	for entity, tracker in self.trackers do
+		-- FUCK SEPERATION OF CONCERNS AT THIS POINT
+		-- TODO: FUCK
+		local worldEntity = self.agent:getScene():getEntityByUuid(entity:getUuid())
 		if not seenThisFrame[entity] then
 			if tracker.value >= 1 then
 				continue
 			end
 
-			-- FUCK SEPERATION OF CONCERNS AT THIS POINT
-			-- TODO: FUCK
-			if self.agent:getScene():getEntityByUuid(entity:getUuid()) == nil then
+			if worldEntity == nil then
 				self.trackers[entity] = nil
 				continue
 			end
@@ -88,6 +99,29 @@ function DetectionManager.processPerception(
 
 			if tracker.value <= 0 then
 				self.trackers[entity] = nil
+			end
+		end
+
+		if worldEntity and worldEntity.typeId == "player" then
+			local player = worldEntity:getPlayer()
+			if entityValues[player] == nil then
+				entityValues[player] = {}
+			end
+
+			if tracker.value < 1 then
+				table.insert(entityValues[player], {
+					uuid = agentUuid,
+					character = character,
+					detectionValue = tracker.value
+				})
+				tracker.wasCappedLastFrame = false
+			elseif tracker.value >= 1 and not tracker.wasCappedLastFrame then
+				table.insert(entityValues[player], {
+					uuid = agentUuid,
+					character = character,
+					detectionValue = tracker.value
+				})
+				tracker.wasCappedLastFrame = true
 			end
 		end
 	end
@@ -161,6 +195,16 @@ function DetectionManager.calculateSpeed(
 	local progressRate = (1 / BASE_DETECTION_TIME) * speedMultiplier
 
 	return progressRate
+end
+
+--
+
+function DetectionManager.flushToClients(): ()
+	for player, data in entityValues do
+		TypedRemotes.ClientboundDetection:FireClient(player, data)
+	end
+
+	table.clear(entityValues)
 end
 
 return DetectionManager

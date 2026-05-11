@@ -4,6 +4,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Entity = require(ServerScriptService.server.world.entity.Entity)
+local DetectionManager = require(ServerScriptService.server.world.entity.ai.detection.DetectionManager)
 local PlayerEntity = require(ServerScriptService.server.world.entity.player.PlayerEntity)
 local SceneAccessor = require(ServerScriptService.server.world.level.scene.SceneAccessor)
 local StateComponent = require(ServerScriptService.server.world.level.scene.components.registry.StateComponent)
@@ -55,6 +56,12 @@ function PlayerEntityManagerComponent.setup(self: PlayerEntityManagerComponent, 
 	for _, player in Players:GetPlayers() do
 		self:onPlayerAdded(player, scene) -- NOTES: Reference leak?
 	end
+
+	-- Detection
+
+	self.maid:giveTask(scene.afterEvents.postUpdateEntities:Connect(function()
+		DetectionManager.flushToClients() -- TODO: Could be a better way to do this but ehhh
+	end))
 end
 
 function PlayerEntityManagerComponent.onSceneReady(self: PlayerEntityManagerComponent, scene: SceneAccessor): ()

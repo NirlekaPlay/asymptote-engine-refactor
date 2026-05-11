@@ -7,6 +7,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local StarterPlayer = game:GetService("StarterPlayer")
+local DetectionMeterRenderer = require(StarterPlayer.StarterPlayerScripts.client.modules.renderer.hud.DetectionMeterRenderer)
+local DetectionMeter = require(StarterPlayer.StarterPlayerScripts.client.modules.ui.DetectionMeter)
 local BlendStack = require(ReplicatedStorage.shared.cinemachine.camera.BlendStack)
 local CameraBrain = require(ReplicatedStorage.shared.cinemachine.camera.CameraBrain)
 local DialogueController = require(StarterPlayer.StarterPlayerScripts.client.modules.ui.dialogue.DialogueController)
@@ -16,10 +18,27 @@ local HandheldNoise = require(ReplicatedStorage.shared.cinemachine.camera.compon
 local MutableTextComponent = require(ReplicatedStorage.shared.network.chat.MutableTextComponent)
 local TextColor = require(ReplicatedStorage.shared.network.chat.TextColor)
 local TextStyle = require(ReplicatedStorage.shared.network.chat.TextStyle)
+local TypedRemotes = require(ReplicatedStorage.shared.network.remotes.TypedRemotes)
 local CharacterFaceService = require(ReplicatedStorage.shared.world.entity.face.CharacterFaceService)
 require(StarterPlayer.StarterPlayerScripts.client.modules.ui.screens.ObjectivesScreen)
 
 CharacterFaceService.init()
+
+-- Detection
+
+TypedRemotes.ClientboundDetection.OnClientEvent:Connect(function(detectionDatas)
+	for _, detectionData in detectionDatas do
+		DetectionMeter.addOrUpdateNpcsDetectionValue(detectionData)
+	end
+end)
+
+RunService.PreRender:Connect(function(deltaTime)
+	DetectionMeterRenderer.clearBatch()
+	DetectionMeter.render(deltaTime)
+	DetectionMeterRenderer.renderBatchedCalls()
+end)
+
+--
 
 if true then
 	return
