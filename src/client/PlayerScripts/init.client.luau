@@ -26,9 +26,21 @@ CharacterFaceService.init()
 
 -- Detection
 
+local CAUGHT_SOUND = ReplicatedStorage.shared.assets.sounds.detection_alert:Clone()
+
 TypedRemotes.ClientboundDetection.OnClientEvent:Connect(function(detectionDatas)
 	for _, detectionData in detectionDatas do
 		DetectionMeter.addOrUpdateNpcsDetectionValue(detectionData)
+		if detectionData.detectionValue >= 1 and detectionData.character and detectionData.character.PrimaryPart then
+			local sound = CAUGHT_SOUND:Clone()
+			sound.PlayOnRemove = true
+			sound.Volume = 1.3
+			sound.Parent = detectionData.character.PrimaryPart
+			sound.Played:Once(function()
+				sound:Destroy()
+			end)
+			sound:Play()
+		end
 	end
 end)
 
