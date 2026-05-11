@@ -10,6 +10,7 @@ local Brain = require(ServerScriptService.server.world.entity.ai.Brain)
 local DetectableEntityComponent = require(ServerScriptService.server.world.entity.ai.detection.entity.DetectableEntityComponent)
 local EntityInLevelCallback = require(ServerScriptService.server.world.level.entity.EntityInLevelCallback)
 local Scene = require(ServerScriptService.server.world.level.scene.Scene)
+local StateComponentRegistry = require(ServerScriptService.server.world.level.scene.components.registry.StateComponentRegistry)
 
 --[=[
 	@class PlayerEntity
@@ -128,7 +129,9 @@ function PlayerEntity.new(scene, uuid: string, player: Player, character: Model 
 			end
 
 			local condition = agentEnforceClass[disguise]
-			local alertValue = 0 -- TODO: THis shit. Mission.getAlertLevelNumericValue(Mission.getAlertLevel())
+			local mission = self:getScene():getComponent(StateComponentRegistry.Types.MISSION)
+			local alertLevel = mission:getAlertLevel()
+			local alertValue = mission:getAlertLevelNumericValue(alertLevel)
 
 			if condition >= 5 then
 				return true

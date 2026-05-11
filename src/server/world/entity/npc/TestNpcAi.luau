@@ -6,6 +6,9 @@ local Activity = require(ServerScriptService.server.world.entity.ai.behavior.Act
 local BehaviorWrapper = require(ServerScriptService.server.world.entity.ai.behavior.BehaviorWrapper)
 local BlinkEyes = require(ServerScriptService.server.world.entity.ai.behavior.BlinkEyes)
 local InteractWithDoor = require(ServerScriptService.server.world.entity.ai.behavior.InteractWithDoor)
+local LookAndFaceAtTargetSink = require(ServerScriptService.server.world.entity.ai.behavior.LookAndFaceAtTargetSink)
+local LookAtSuspiciousEntities = require(ServerScriptService.server.world.entity.ai.behavior.LookAtSuspiciousEntities)
+local SetIsCuriousMemory = require(ServerScriptService.server.world.entity.ai.behavior.SetIsCuriousMemory)
 local WalkToRandomPost = require(ServerScriptService.server.world.entity.ai.behavior.WalkToRandomPost)
 local WalkToTargetSink = require(ServerScriptService.server.world.entity.ai.behavior.WalkToTargetSink)
 local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.memory.MemoryModuleTypes)
@@ -69,6 +72,9 @@ end
 
 function TestNpcAi.initCoreActivity(brain: Brain<Agent>): ()
 	brain:addActivity(Activity.CORE, 2, {
+		BehaviorWrapper.new(SetIsCuriousMemory.new()),
+		BehaviorWrapper.new(LookAtSuspiciousEntities.new()),
+		BehaviorWrapper.new(LookAndFaceAtTargetSink.new()),
 		BehaviorWrapper.new(WalkToTargetSink.new()),
 		BehaviorWrapper.new(InteractWithDoor.new()),
 		BehaviorWrapper.new(BlinkEyes.new())

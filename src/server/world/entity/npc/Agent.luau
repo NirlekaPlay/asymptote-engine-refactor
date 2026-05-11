@@ -6,6 +6,7 @@ local ServerFaceControl = require(ReplicatedStorage.shared.world.entity.face.Ser
 local Entity = require(ServerScriptService.server.world.entity.Entity)
 local Brain = require(ServerScriptService.server.world.entity.ai.Brain)
 local BodyRotationControl = require(ServerScriptService.server.world.entity.ai.control.BodyRotationControl)
+local LookControl = require(ServerScriptService.server.world.entity.ai.control.LookControl)
 local PathNavigation = require(ServerScriptService.server.world.entity.ai.navigation.PathNavigation)
 local HumanoidAnimator = require(ServerScriptService.server.world.entity.animation.HumanoidAnimator)
 local Scene = require(ServerScriptService.server.world.level.scene.Scene)
@@ -14,6 +15,7 @@ export type Agent = Entity.Entity & {
 	getBrain: (self: Agent) -> Brain.Brain<Agent>,
 	getBodyRotationControl: (self: Agent) -> BodyRotationControl.BodyRotationControl,
 	getFaceControl: (self: Agent) -> ServerFaceControl.ServerFaceControl,
+	getLookControl: (self: Agent) -> LookControl.LookControl,
 	getBlockPosition: (self: Agent) -> Vector3,
 	getNavigation: (self: Agent) -> PathNavigation.PathNavigation,
 	getScene: (self: Agent) -> Scene.Scene,

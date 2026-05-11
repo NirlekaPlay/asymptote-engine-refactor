@@ -5,11 +5,8 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local Draw = require(ReplicatedStorage.shared.thirdparty.Draw)
 local Agent = require(ServerScriptService.server.world.entity.npc.Agent)
-local ReporterAgent = require(ServerScriptService.server.ReporterAgent)
 local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.memory.MemoryModuleTypes)
 local MemoryStatus = require(ServerScriptService.server.world.entity.ai.memory.MemoryStatus)
-local EntityManager = require(ServerScriptService.server.entity.EntityManager)
-local EntityUtils = require(ServerScriptService.server.entity.util.EntityUtils)
 
 local DEBUG_SOUND_PERCEIVED_POS = false
 local BLUE = Color3.new(0, 0, 1)
@@ -32,7 +29,7 @@ end
 
 type MemoryModuleType<T> = MemoryModuleTypes.MemoryModuleType<T>
 type MemoryStatus = MemoryStatus.MemoryStatus
-type Agent = Agent.Agent & ReporterAgent.ReporterAgent
+type Agent = Agent.Agent
 
 local MEMORY_REQUIREMENTS = {
 	[MemoryModuleTypes.VISIBLE_ENTITIES] = MemoryStatus.REGISTERED,
@@ -66,14 +63,10 @@ function LookAndFaceAtTargetSink.canStillUse(self: LookAndFaceAtTargetSink, agen
 				return true
 			end
 
-			local entityObj = EntityManager.getEntityByUuid(targetUuid)
+			local entityObj = agent:getScene():getEntityByUuid(targetUuid)
 
-			if entityObj and entityObj.name == "Sound" then
-				return true
-			end
-
-			if EntityUtils.isPlayer(entityObj) then
-				local character = EntityUtils.getPlayerOrThrow(entityObj).Character
+			if entityObj and entityObj.typeId == "player" then
+				local character = entityObj:getWorldInstance()
 				if not character then
 					return false
 				end
@@ -85,7 +78,7 @@ function LookAndFaceAtTargetSink.canStillUse(self: LookAndFaceAtTargetSink, agen
 					return true
 				end
 
-				return hearingPlayers[entityObj.instance :: Player] ~= nil
+				return hearingPlayers[entityObj:getPlayer()] ~= nil
 			end
 
 			return false
@@ -111,22 +104,12 @@ function LookAndFaceAtTargetSink.doUpdate(self: LookAndFaceAtTargetSink, agent: 
 
 	if lookTarget:isPresent() then
 		local entityUuid = lookTarget:get()
-		local entityObj = EntityManager.getEntityByUuid(entityUuid)
+		local entityObj = agent:getScene():getEntityByUuid(entityUuid)
 		if not entityObj then
 			return
 		end
 
-		if entityObj.name == "Sound" then
-			-- TODO: SRP.
-			local soundPerceivedPos = agent.hearingSounds[entityUuid].lastVisitedNodePos
-			self.lastKnownTargetPos = soundPerceivedPos
-
-			if DEBUG_SOUND_PERCEIVED_POS then
-				Draw.point(soundPerceivedPos, BLUE)
-			end
-		else
-			self.lastKnownTargetPos = EntityUtils.getPos(entityObj)
-		end
+		self.lastKnownTargetPos = entityObj:getPosition()
 	end
 
 	if self.lastKnownTargetPos then

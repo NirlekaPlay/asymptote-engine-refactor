@@ -13,6 +13,8 @@ local DECAY_RATE_PER_SEC = 0.01 / 0.045 -- ≈ 0.222 (Sec. 1(d) of Plan doc.)
 local QUICK_DETECTION_RANGE = 10
 local QUIK_DETECTION_MULTIPLIER = 3.33
 local BASE_DETECTION_TIME = 1.25
+local CURIOUS_COOLDOWN_TIME = 2
+local CURIOUS_THRESHOLD = 60 / 100
 
 --
 
@@ -29,16 +31,55 @@ DetectionManager.__index = DetectionManager
 export type DetectionManager = typeof(setmetatable({} :: {
 	agent: DetectionAgent.DetectionAgent,
 	trackers: { [DetectableEntity.DetectableEntity]: DetectionTracker.DetectionTracker },
-	highestTarget: DetectableEntity.DetectableEntity?
+	highestTarget: DetectableEntity.DetectableEntity?,
+	focusingTarget: DetectableEntity.DetectableEntity?,
+	--
+	curious: boolean,
+	curiousCooldown: number
 }, DetectionManager))
 
 function DetectionManager.new(agent: DetectionAgent.DetectionAgent): DetectionManager
 	return setmetatable({
 		agent = agent,
 		trackers = {},
-		highestTarget = nil :: DetectableEntity.DetectableEntity?
+		highestTarget = nil :: DetectableEntity.DetectableEntity?,
+		focusingTarget = nil :: DetectableEntity.DetectableEntity?,
+		curious = false,
+		curiousCooldown = 0
 	}, DetectionManager)
 end
+
+--
+
+function DetectionManager.isCurious(self: DetectionManager): boolean
+	return self.curious
+end
+
+function DetectionManager.isDetecting(self: DetectionManager): boolean
+	return self.focusingTarget ~= nil
+end
+
+function DetectionManager.getFocusingTarget(self: DetectionManager): DetectableEntity.DetectableEntity?
+	return self.focusingTarget
+end
+
+function DetectionManager.getPrioritizedTarget(self: DetectionManager): DetectableEntity.DetectableEntity?
+	return self.highestTarget
+end
+
+function DetectionManager.isFullyDetected(self: DetectionManager, uuid: string): boolean
+	-- TODO: This shit is O(n).
+	-- Why.
+	for entity, tracker in self.trackers do
+		if entity:getUuid() == uuid then
+			return tracker.value >= 1.0
+		end
+	end
+
+	return false
+end
+
+--
 
 function DetectionManager.processPerception(
 	self: DetectionManager,
@@ -54,6 +95,8 @@ function DetectionManager.processPerception(
 			priorityFloor = math.max(priorityFloor, entity:getPriority(contexts[tracker.source:getUuid()]))
 		end
 	end
+
+	local focus
 
 	for _, detectable in perceived do
 		local context = contexts[detectable:getUuid()]
@@ -76,10 +119,16 @@ function DetectionManager.processPerception(
 		local speed = self:calculateSpeed(detectable, dist, context)
 		tracker:increase(speed * deltaTime)
 		seenThisFrame[detectable] = true
+
+		focus = detectable
 	end
+
+	self.focusingTarget = focus
 
 	local agentUuid = self.agent:getUuid()
 	local character = self.agent:getWorldInstance()
+
+	local shouldBeCurious = false
 
 	for entity, tracker in self.trackers do
 		-- FUCK SEPERATION OF CONCERNS AT THIS POINT
@@ -124,6 +173,28 @@ function DetectionManager.processPerception(
 				tracker.wasCappedLastFrame = true
 			end
 		end
+
+		if not shouldBeCurious and not tracker.wasCappedLastFrame and tracker.value >= CURIOUS_THRESHOLD then
+			shouldBeCurious = true
+		end
+
+		-- Yeah I don't fucking know.
+		if tracker.value >= 1.0 then
+			shouldBeCurious = true
+		end
+	end
+
+	if shouldBeCurious then
+		self.curious = true
+		self.curiousCooldown = CURIOUS_COOLDOWN_TIME
+	else
+		if self.curious and self.curiousCooldown > 0 then
+			self.curiousCooldown -= deltaTime
+		end
+	end
+
+	if self.curiousCooldown <= 0 then
+		self.curious = false
 	end
 
 	self:updateHighestPriority()

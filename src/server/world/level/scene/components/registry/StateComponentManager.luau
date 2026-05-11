@@ -3,6 +3,7 @@
 local ServerScriptService = game:GetService("ServerScriptService")
 local SceneAccessor = require(ServerScriptService.server.world.level.scene.SceneAccessor)
 local StateComponent = require(ServerScriptService.server.world.level.scene.components.registry.StateComponent)
+local StateComponentType = require(ServerScriptService.server.world.level.scene.components.registry.StateComponentType)
 
 --[=[
 	@class StateComponentManager
@@ -30,6 +31,16 @@ end
 function StateComponentManager.addComponent<T>(self: StateComponentManager, component: StateComponent): ()	
 	table.insert(self.components, component)
 	component:setup(self.scene)
+end
+
+function StateComponentManager.getComponent<T>(self: StateComponentManager, type: StateComponentType.StateComponentType<T>): T
+	for _, component in self.components do
+		if type.isInstanceOf(component) then
+			return component
+		end
+	end
+	
+	error(`StateComponent '{type.name}' not found`) -- Might be too harsh?
 end
 
 function StateComponentManager.update(self: StateComponentManager, deltaTime: number): ()

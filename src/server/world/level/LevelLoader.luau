@@ -7,6 +7,7 @@ local MissionSetupReader = require(ServerScriptService.server.world.level.missio
 local PropRegistry = require(ServerScriptService.server.world.level.props.registry.PropRegistry)
 local Scene = require(ServerScriptService.server.world.level.scene.Scene)
 local LocalizedStringsReplicatorComponent = require(ServerScriptService.server.world.level.scene.components.LocalizedStringsReplicatorComponent)
+local MissionComponent = require(ServerScriptService.server.world.level.scene.components.MissionComponent)
 local ObjectivesComponent = require(ServerScriptService.server.world.level.scene.components.ObjectivesComponent)
 local PlayerEntityManagerComponent = require(ServerScriptService.server.world.level.scene.components.PlayerEntityManagerComponent)
 local StateComponentRegistry = require(ServerScriptService.server.world.level.scene.components.registry.StateComponentRegistry)
@@ -93,6 +94,7 @@ function LevelLoader.setupDefaultComponents(scene: Scene.Scene): ()
 	scene.componentManager:addComponent(LocalizedStringsReplicatorComponent.new())
 	scene.componentManager:addComponent(ObjectivesComponent.new())
 	scene.componentManager:addComponent(PlayerEntityManagerComponent.new())
+	scene.componentManager:addComponent(MissionComponent.new())
 end
 
 function LevelLoader.getAndParseMissionSetupModule(sceneFolder: Folder)

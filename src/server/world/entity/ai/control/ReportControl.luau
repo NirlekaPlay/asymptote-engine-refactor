@@ -5,7 +5,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local TalkControl = require(script.Parent.TalkControl)
 local ReportType = require(ReplicatedStorage.shared.world.stealth.report.ReportType)
 local Agent = require(ServerScriptService.server.world.entity.npc.Agent)
-local Mission = require(ServerScriptService.server.world.level.mission.Mission)
+local StateComponentRegistry = require(ServerScriptService.server.world.level.scene.components.registry.StateComponentRegistry)
 
 local RADIO_TOOL = ReplicatedStorage.shared.assets.items.NpcRadioNonFunc
 local RADIO_DROPPED_LIFETIME = 10
@@ -17,7 +17,6 @@ ReportControl.__index = ReportControl
 
 export type ReportControl = typeof(setmetatable({} :: {
 	agent: Agent,
-	serverLevelRef: ServerLevel.ServerLevel,
 	radioTool: typeof(RADIO_TOOL),
 	radioEquipped: boolean,
 	agentDiedConnection: RBXScriptConnection?,
@@ -32,11 +31,10 @@ export type ReportControl = typeof(setmetatable({} :: {
 
 type Agent = Agent.Agent
 
-function ReportControl.new(agent: Agent, serverLevel: ServerLevel.ServerLevel): ReportControl
+function ReportControl.new(agent: Agent): ReportControl
 	local radioTool = RADIO_TOOL:Clone()
 	return setmetatable({
 		agent = agent,
-		serverLevelRef = serverLevel,
 		radioTool = radioTool,
 		radioEquipped = false,
 		reportingOn = nil :: any,
@@ -93,13 +91,13 @@ function ReportControl.update(self: ReportControl, deltaTime: number): ()
 	if self.reportingOn then
 		self.reportingOn.reportTimer += deltaTime
 		if self.reportingOn.reportTimer >= self.reportingOn.reportDuration then
-			Mission.raiseAlertLevel(self.reportingOn.reportType.alertLevelRaiseAmount)
+			(self.agent :: Agent):getScene():getComponent(StateComponentRegistry.Types.MISSION):raiseAlertLevel(self.reportingOn.reportType.alertLevelRaiseAmount)
 
 			-- TODO: This feels like a sin but its the only way i can think of
 			-- cuz i want this to work.
 			task.delay(self.reportingOn.unequipRadioDelay, function()
 				if self.agent and self.agent.character then
-					self.agent.character.isReporting.Value = false
+					(self.agent :: Agent.Agent):getOverlayState().isReporting = true;
 					self:unequipRadio()
 				end
 			end)
@@ -156,9 +154,9 @@ function ReportControl.dropRadio(self: ReportControl): ()
 		dir = Vector3.new(math.random(), math.random(), math.random()).Unit
 	end
 	dir *= math.random(MIN_DROP_PUSH, MAX_DROP_PUSH)
-	hanlde:ApplyImpulse(dir)
+	hanlde:ApplyImpulse(dir);
 
-	self.serverLevelRef:getPersistentInstanceManager():scheduleDestroy(hanlde, RADIO_DROPPED_LIFETIME)
+	(self.agent :: Agent):getScene():getDebrisManager():scheduleDestroy(hanlde, RADIO_DROPPED_LIFETIME)
 end
 
 --
@@ -171,8 +169,8 @@ function ReportControl.connectDiedConnection(self: ReportControl): ()
 	if not self.agentDiedConnection then
 		self.agentDiedConnection = (self.agent.character:FindFirstChildOfClass("Humanoid") :: Humanoid).Died:Once(function()
 			if self:isRadioEquipped() then
-				self.serverLevelRef:getPersistentInstanceManager():register(self.radioTool)
-				self.serverLevelRef:getPersistentInstanceManager():registerInstances(self.radioTool:GetChildren())
+				(self.agent :: Agent):getScene():getDebrisManager():register(self.radioTool);
+				(self.agent :: Agent):getScene():getDebrisManager():registerInstances(self.radioTool:GetChildren())
 				self:dropRadio()
 			else
 				self.radioTool:Destroy()

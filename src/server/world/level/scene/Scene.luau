@@ -5,6 +5,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Signal = require(ReplicatedStorage.shared.thirdparty.Signal)
 local Entity = require(ServerScriptService.server.world.entity.Entity)
 local CellManager = require(ServerScriptService.server.world.level.cell.CellManager)
+local DebrisManager = require(ServerScriptService.server.world.level.debris.DebrisManager)
 local EntitySectionManager = require(ServerScriptService.server.world.level.entity.EntitySectionManager)
 local EntityTickList = require(ServerScriptService.server.world.level.entity.EntityTickList)
 local LevelCallback = require(ServerScriptService.server.world.level.entity.LevelCallback)
@@ -12,6 +13,7 @@ local InteractionPromptBuilder = require(ServerScriptService.server.world.level.
 local MissionSetup = require(ServerScriptService.server.world.level.mission.reading.MissionSetup)
 local NavMesh = require(ServerScriptService.server.world.level.navmesh.NavMesh)
 local StateComponentManager = require(ServerScriptService.server.world.level.scene.components.registry.StateComponentManager)
+local StateComponentType = require(ServerScriptService.server.world.level.scene.components.registry.StateComponentType)
 local PropManager = require(ServerScriptService.server.world.level.scene.props.PropManager)
 local StateController = require(ServerScriptService.server.world.level.states.StateController)
 
@@ -26,6 +28,7 @@ export type Scene = typeof(setmetatable({} :: {
 	propManager: PropManager.PropManager,
 	entityManager: EntitySectionManager.EntitySectionManager,
 	componentManager: StateComponentManager.StateComponentManager,
+	debrisManager: DebrisManager.DebrisManager,
 	stateController: StateController.StateController,
 	entityTickList: EntityTickList.EntityTickList,
 	navMesh: NavMesh.NavMesh,
@@ -45,6 +48,7 @@ function Scene.new(cells, missionSetup: MissionSetup.MissionSetup): Scene
 	local this = setmetatable({
 		cellManager = CellManager.new(cells, missionSetup.cells),
 		propManager = PropManager.new(),
+		debrisManager = DebrisManager.new(),
 		stateController = StateController.new(),
 		entityTickList = EntityTickList.new(),
 		navMesh = NavMesh.new(),
@@ -77,6 +81,18 @@ function Scene.new(cells, missionSetup: MissionSetup.MissionSetup): Scene
 	this.componentManager = StateComponentManager.new(this :: any)
 
 	return this
+end
+
+--
+
+function Scene.getDebrisManager(self: Scene): DebrisManager.DebrisManager
+	return self.debrisManager
+end
+
+--
+
+function Scene.getComponent<T>(self: Scene, type: StateComponentType.StateComponentType<T>): T
+	return self.componentManager:getComponent(type)
 end
 
 --

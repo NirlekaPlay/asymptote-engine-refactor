@@ -2,9 +2,11 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local MissionComponent = require(ServerScriptService.server.world.level.scene.components.MissionComponent)
 local UString = require(ReplicatedStorage.shared.util.string.UString)
 local NpcStateTrackerComponent = require(ServerScriptService.server.world.level.scene.components.NpcStateTrackerComponent)
 local StateComponent = require(ServerScriptService.server.world.level.scene.components.registry.StateComponent)
+local StateComponentType = require(ServerScriptService.server.world.level.scene.components.registry.StateComponentType)
 
 local COMPONENT_TYPE_ATTRIBUTE_NAME = "Type"
 
@@ -12,6 +14,20 @@ local COMPONENT_TYPE_ATTRIBUTE_NAME = "Type"
 	@class StateComponentRegistry
 ]=]
 local StateComponentRegistry = {}
+
+type StateComponentType<T> = StateComponentType.StateComponentType<T>
+
+local function registerType<T>(class: any, name: string): StateComponentType<T>
+	-- I might be overcomplicating shit but ehhhhhhhh
+	return {
+		name = name,
+		isInstanceOf = function(v)
+			return getmetatable(v) == class
+		end
+	}
+end
+StateComponentRegistry.Types = {}
+StateComponentRegistry.Types.MISSION = registerType(MissionComponent, "mission") :: StateComponentType<MissionComponent.MissionComponent>
 
 local handlersForInstance: { [string]: (inst: Instance) -> StateComponent.StateComponent? } = {}
 

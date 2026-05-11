@@ -3,10 +3,9 @@
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local Agent = require(ServerScriptService.server.world.entity.npc.Agent)
-local DetectionAgent = require(ServerScriptService.server.DetectionAgent)
 local MemoryModuleTypes = require(ServerScriptService.server.world.entity.ai.memory.MemoryModuleTypes)
 local MemoryStatus = require(ServerScriptService.server.world.entity.ai.memory.MemoryStatus)
-local EntityManager = require(ServerScriptService.server.entity.EntityManager)
+local DetectingAgent = require(ServerScriptService.server.world.entity.npc.DetectingAgent)
 
 --[=[
 	@class LookAtSuspiciousEntities
@@ -20,7 +19,7 @@ export type LookAtSuspiciousEntities = typeof(setmetatable({} :: {
 
 type MemoryModuleType<T> = MemoryModuleTypes.MemoryModuleType<T>
 type MemoryStatus = MemoryStatus.MemoryStatus
-type Agent = Agent.Agent & DetectionAgent.DetectionAgent
+type Agent = Agent.Agent & DetectingAgent.DetectingAgent
 
 function LookAtSuspiciousEntities.new(): LookAtSuspiciousEntities
 	return setmetatable({
@@ -98,13 +97,14 @@ function LookAtSuspiciousEntities.doUpdate(self: LookAtSuspiciousEntities, agent
 	
 	-- CASE 3: We have a focus target - set it as look target if conditions are met
 	if focusTarget then
-		local entity = EntityManager.getEntityByUuid(focusTarget.entityUuid)
+		local targetUuid = focusTarget:getUuid()
+		local entity = agent:getScene():getEntityByUuid(targetUuid)
 		if entity then
-			local detectionLevel = detectionManager:getDetectionLevel(focusTarget.entityUuid)
+			local detected = detectionManager:isFullyDetected(targetUuid)
 			
 			-- Look at the entity if we're curious OR it's fully detected
-			if isCurious or detectionLevel >= 1.0 then
-				brain:setMemory(MemoryModuleTypes.LOOK_TARGET, focusTarget.entityUuid)
+			if isCurious or detected then
+				brain:setMemory(MemoryModuleTypes.LOOK_TARGET, targetUuid)
 			end
 		end
 	end

@@ -9,8 +9,10 @@ local ServerFaceControl = require(ReplicatedStorage.shared.world.entity.face.Ser
 local Entity = require(ServerScriptService.server.world.entity.Entity)
 local Brain = require(ServerScriptService.server.world.entity.ai.Brain)
 local BodyRotationControl = require(ServerScriptService.server.world.entity.ai.control.BodyRotationControl)
+local LookControl = require(ServerScriptService.server.world.entity.ai.control.LookControl)
 local MoveControl = require(ServerScriptService.server.world.entity.ai.control.MoveControl)
 local RagdollControl = require(ServerScriptService.server.world.entity.ai.control.RagdollControl)
+local ReportControl = require(ServerScriptService.server.world.entity.ai.control.ReportControl)
 local DetectionManager = require(ServerScriptService.server.world.entity.ai.detection.DetectionManager)
 local DetectableEntity = require(ServerScriptService.server.world.entity.ai.detection.entity.DetectableEntity)
 local DetectionContext = require(ServerScriptService.server.world.entity.ai.detection.entity.DetectionContext)
@@ -59,7 +61,9 @@ function AbstractNpc.new(scene, character: Model & { Humanoid: Humanoid, Humanoi
 	self.bodyRotationControl = BodyRotationControl.new(character, self.pathNavigation)
 	self.faceControl = CharacterFaceService.register(character)
 	self.faceControl:setFace("Neutral")
+	self.lookControl = LookControl.new(character)
 	self.ragdollControl = RagdollControl.new(character)
+	self.reportControl = ReportControl.new(self :: any)
 	self.typeId = "npc"
 	self.humanoid = (character :: any).Humanoid :: Humanoid
 	self.random = Random.new( )
@@ -306,6 +310,18 @@ end
 
 function AbstractNpc.getFaceControl(self): ServerFaceControl.ServerFaceControl
 	return self.faceControl
+end
+
+function AbstractNpc.getLookControl(self): LookControl.LookControl
+	return self.lookControl
+end
+
+function AbstractNpc.getReportControl(self): ReportControl.ReportControl
+	return self.reportControl
+end
+
+function AbstractNpc.getDetectionManager(self): DetectionManager.DetectionManager
+	return self.detectionManager
 end
 
 --
