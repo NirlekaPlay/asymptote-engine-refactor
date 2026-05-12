@@ -107,9 +107,13 @@ function PlayerEntity.new(scene, uuid: string, player: Player, character: Model 
 			end
 			return status:getDetectionSpeedModifier()
 		end)
-		:withMovementMultiplier(function()
-			local vel = self.character.HumanoidRootPart.AssemblyLinearVelocity.Magnitude
-			return 1 + (vel / 16)
+		:withMovementMultiplier(function(context)
+			if context.isHeard then
+				local vel = self.character.HumanoidRootPart.AssemblyLinearVelocity.Magnitude
+				return 1 + (vel / 16)
+			else
+				return 1
+			end
 		end)
 		:withShouldRaiseDetection(function(agent, context)
 			local statusHolder = PlayerStatusRegistry.getPlayerStatusHolder(self.player)

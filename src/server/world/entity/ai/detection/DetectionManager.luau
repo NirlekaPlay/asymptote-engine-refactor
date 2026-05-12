@@ -92,7 +92,7 @@ function DetectionManager.processPerception(
 	local priorityFloor = 0
 	for entity, tracker in self.trackers do
 		if tracker.value >= 1 then
-			priorityFloor = math.max(priorityFloor, entity:getPriority(contexts[tracker.source:getUuid()]))
+			priorityFloor = math.max(priorityFloor, entity:getPriority(contexts[tracker.source:getUuid()] or {}))
 		end
 	end
 
