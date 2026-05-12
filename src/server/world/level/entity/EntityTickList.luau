@@ -5,11 +5,37 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Entity = require(ServerScriptService.server.world.entity.Entity)
 local LinkedHashMap = require(ReplicatedStorage.shared.util.collections.LinkedHashMap)
 
+local UNPROTECTED_LOOP_CALL = (workspace:GetAttribute("UnprotectedEntityLoopCall") == true) or false
+
 local function try(func, ...)
 	return xpcall(func, function(err)
 		warn(tostring(err) .. "\n" .. debug.traceback())
 		return false, err
 	end, ...)
+end
+
+local function safeWaitExecute(func: (...any) -> (...any), ...: any): ()
+	local caller = coroutine.running()
+	local completed = false
+
+	local worker = task.spawn(function(...)
+		func(...)
+		completed = true
+		task.defer(caller)
+	end, ...)
+
+	task.spawn(function()
+		while not completed do
+			if coroutine.status(worker) == "dead" then
+				completed = true
+				task.defer(caller)
+				return
+			end
+			task.wait()
+		end
+	end)
+
+	return coroutine.yield()
 end
 
 --[=[
@@ -57,11 +83,19 @@ function EntityTickList.forEach(self: EntityTickList, fn: (entity: Entity) -> ()
 
 		local iterating = self.active -- Is this necessary?
 
-		try(function()
+		local f = function()
+			debug.profilebegin("entities")
 			for entity in iterating:keys() do
 				fn(entity)
 			end
-		end)
+			debug.profileend()
+		end
+
+		if not UNPROTECTED_LOOP_CALL then
+			try(f)
+		else
+			safeWaitExecute(f)
+		end
 
 		self.iterated = nil
 	end

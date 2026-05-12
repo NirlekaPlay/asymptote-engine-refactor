@@ -172,7 +172,6 @@ function Scene.update(self: Scene, deltaTime: number): ()
 
 	debug.profileend()
 
-	debug.profilebegin("entities")
 	self.entityTickList:forEach(function(entity)
 		if entity:isRemoved() then
 			return
@@ -180,7 +179,6 @@ function Scene.update(self: Scene, deltaTime: number): ()
 
 		entity:update(deltaTime)
 	end)
-	debug.profileend()
 
 	self.afterEvents.postUpdateEntities:Fire()
 
