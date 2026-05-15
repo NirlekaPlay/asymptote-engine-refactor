@@ -124,9 +124,9 @@ RunService.PreRender:Connect(function(dt)
 		end
 	end
 
-	if currentZoom > 0.1 then
+	if zoomState == 1 then
 		transparencyController:show()
-	elseif currentSide < 0.5 then
+	else
 		transparencyController:hide()
 	end
 

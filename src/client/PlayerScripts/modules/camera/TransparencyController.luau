@@ -3,7 +3,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Maid = require(ReplicatedStorage.shared.util.misc.Maid)
 
-local TWEEN_RATE = 0.9
+local TWEEN_RATE = 0.5
 
 local function isValidPart(inst: Instance)
 	if not (inst:IsA("BasePart") or inst:IsA("Decal")) then return false end
