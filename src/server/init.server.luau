@@ -38,12 +38,18 @@ local function onPlayerJoin(player: Player): ()
 	local maid = Maid.new()
 	playerMaids[player] = maid
 
-	maid:giveTask(player.CharacterAppearanceLoaded:Once(function(character)
+	maid:giveTask(player.CharacterAdded:Once(function(character)
 		for _, part in character:GetChildren() do
 			if part:IsA("BasePart") then
 				part.CollisionGroup = CollisionGroupTypes.PLAYER
 			end
 		end
+
+		character.DescendantAdded:Connect(function(inst)
+			if inst:IsA("BasePart") then
+				inst.CollisionGroup = CollisionGroupTypes.PLAYER
+			end
+		end)
 	end))
 end
 

@@ -233,6 +233,7 @@ function FaceControl.createHdifyFaceDecals(head: BasePart): BasePart
 	part.Color = head.Color
 	part.Size = Vector3.new(2, 1, 1)
 	part.CFrame = CFrame.new(-7, 4.5, -8.5)
+	part.CollisionGroup = "NonCollideWithPlayer" -- TODO: Use CollisionGroupTypes
 	part.PivotOffset = CFrame.new(0, -4.5, 0)
 
 	local mesh = Instance.new("SpecialMesh")
