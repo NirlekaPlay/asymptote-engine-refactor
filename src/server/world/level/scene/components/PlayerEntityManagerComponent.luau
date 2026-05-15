@@ -36,6 +36,28 @@ end
 
 function PlayerEntityManagerComponent.onPlayerAdded(self: PlayerEntityManagerComponent, player: Player, scene: SceneAccessor): ()
 	self.maid:giveTask(player.CharacterAdded:Connect(function(character)
+		local healthScriptProccessed = false
+		for _, child in character:GetChildren() do
+			if child:IsA("Script") and child.Name == "Health" then
+				child:Destroy()
+				healthScriptProccessed = true
+			end
+		end
+		
+		if not healthScriptProccessed then
+			local conn
+		
+			conn = character.ChildAdded:Connect(function(child)
+				if child:IsA("Script") and child.Name == "Health" then
+					child:Destroy()
+					if conn then
+						conn:Disconnect()
+						conn = nil
+					end
+				end
+			end)
+		end
+
 		scene:addFreshEntity(PlayerEntity.new(scene, tostring(player.UserId), player, character))
 	end))
 end
