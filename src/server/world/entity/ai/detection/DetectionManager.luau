@@ -5,9 +5,9 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local DetectionPayload = require(ReplicatedStorage.shared.network.payloads.DetectionPayload)
 local TypedRemotes = require(ReplicatedStorage.shared.network.remotes.TypedRemotes)
 local DetectableEntity = require(ServerScriptService.server.world.entity.ai.detection.entity.DetectableEntity)
-local DetectionAgent = require(ServerScriptService.server.world.entity.ai.detection.DetectionAgent)
 local DetectionTracker = require(ServerScriptService.server.world.entity.ai.detection.DetectionTracker)
 local DetectionContext = require(ServerScriptService.server.world.entity.ai.detection.entity.DetectionContext)
+local Agent = require(ServerScriptService.server.world.entity.npc.Agent)
 
 local DECAY_RATE_PER_SEC = 0.01 / 0.045 -- ≈ 0.222 (Sec. 1(d) of Plan doc.)
 local QUICK_DETECTION_RANGE = 10
@@ -29,7 +29,7 @@ local DetectionManager = {}
 DetectionManager.__index = DetectionManager
 
 export type DetectionManager = typeof(setmetatable({} :: {
-	agent: DetectionAgent.DetectionAgent,
+	agent: Agent,
 	trackers: { [DetectableEntity.DetectableEntity]: DetectionTracker.DetectionTracker },
 	highestTarget: DetectableEntity.DetectableEntity?,
 	focusingTarget: DetectableEntity.DetectableEntity?,
@@ -38,7 +38,9 @@ export type DetectionManager = typeof(setmetatable({} :: {
 	curiousCooldown: number
 }, DetectionManager))
 
-function DetectionManager.new(agent: DetectionAgent.DetectionAgent): DetectionManager
+type Agent = Agent.Agent
+
+function DetectionManager.new(agent: Agent): DetectionManager
 	return setmetatable({
 		agent = agent,
 		trackers = {},
