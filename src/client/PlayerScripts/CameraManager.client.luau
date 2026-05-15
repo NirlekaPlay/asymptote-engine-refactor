@@ -11,10 +11,11 @@ local TransparencyController = require(StarterPlayer.StarterPlayerScripts.client
 local CoreCall = require(StarterPlayer.StarterPlayerScripts.client.modules.util.CoreCall)
 
 local DISTANCE = 8
-local HEIGHT = 2
 local SHOULDER = 2.5
 local TWEEN_SPEED = 0.2
 local ZOOM_LERP_SPEED = 0.1
+local CAMERA_RADIUS = 0.5 -- padding so screen edges don't clip walls
+local CAMERA_HEIGHT_OFFSET = 2.5
 
 local player = Players.LocalPlayer
 local camera = Workspace.CurrentCamera
@@ -80,6 +81,7 @@ ContextActionService:BindAction("AsymptoteLeanLeft", function(_, inputState)
 end, false, Enum.KeyCode.Q)
 
 RunService.PreRender:Connect(function(dt)
+	debug.profilebegin("Camera.update")
 	isDevConsoleVisible = StarterGui:GetCore("DevConsoleVisible")
 	shouldLockAndHideMouse = not isDevConsoleVisible
 
@@ -94,42 +96,49 @@ RunService.PreRender:Connect(function(dt)
 	local char = player.Character :: Instance
 	local root = char and char:FindFirstChild("HumanoidRootPart") :: BasePart
 	local head = char and char:FindFirstChild("Head") :: BasePart
-	if not (root and head) then
+	if not root then
 		return
 	end
 
 	cameraRaycastParams.FilterDescendantsInstances = {char}
-	
+
 	currentZoom = currentZoom + (zoomState - currentZoom) * (dt / ZOOM_LERP_SPEED)
 	currentSide = currentSide + (targetSide - currentSide) * (dt / TWEEN_SPEED)
 	
-	local baseCF = CFrame.new(root.Position) 
-		* CFrame.Angles(0, rotY, 0) 
-		* CFrame.Angles(rotX, 0, 0)
+	local baseCF = CFrame.new(root.Position) * CFrame.Angles(0, rotY, 0) * CFrame.Angles(rotX, 0, 0)
 
-	local fpPos = head.Position
-	local tpPos = (baseCF * CFrame.new(currentSide * SHOULDER, HEIGHT, DISTANCE)).Position
+	local pivotPos = root.Position + Vector3.new(0, CAMERA_HEIGHT_OFFSET, 0)
+	local shoulderOffset = baseCF.RightVector * (currentSide * SHOULDER)
+	local cameraOrigin = pivotPos + shoulderOffset
+	
+	local targetOffset = baseCF.LookVector * -DISTANCE
+	local finalPos = cameraOrigin + targetOffset
 
-	local targetCameraPos = fpPos:Lerp(tpPos, currentZoom)
-
-	local finalPos = targetCameraPos
 	if currentZoom > 0.1 then
-		-- Third person
-		local startPos = head.Position
-		local direction = targetCameraPos - startPos
-		local raycastResult = Workspace:Raycast(startPos, direction, cameraRaycastParams)
+		local castResult = Workspace:Spherecast(
+			cameraOrigin,
+			CAMERA_RADIUS,
+			targetOffset,
+			cameraRaycastParams
+		)
 
-		if raycastResult then
-			finalPos = raycastResult.Position + (raycastResult.Normal * 0.5)
+		if castResult then
+			local safeDist = math.max(0, castResult.Distance - 0.1)
+			finalPos = cameraOrigin + (targetOffset.Unit * safeDist)
 		end
 	end
 
+	local headPos = head and head.Position or pivotPos
+	local actualPos = headPos:Lerp(finalPos, currentZoom)
+
+	camera.CFrame = CFrame.new(actualPos, actualPos + baseCF.LookVector)
+	
 	if zoomState == 1 then
 		transparencyController:show()
 	else
 		transparencyController:hide()
 	end
-
-	camera.CFrame = CFrame.new(finalPos, finalPos + baseCF.LookVector)
 	transparencyController:update(dt)
+
+	debug.profileend()
 end)

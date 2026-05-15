@@ -58,6 +58,8 @@ function CollisionGroupManager.register()
 	CollisionGroupBuilder.new(CollisionGroupTypes.CLIENT_CAMERA_OCCLUSION_RAY)
 		:notCollideWith(CollisionGroupTypes.BODY_DRAG_RAGDOLL)
 		:notCollideWith(CollisionGroupTypes.RAGDOLL_COLLIDER_PART)
+		:notCollideWith(CollisionGroupTypes.NON_COLLIDE_WITH_PLAYER)
+		:notCollideWith(CollisionGroupTypes.NPC_CHAR)
 		:register()
 
 	CollisionGroupBuilder.new(CollisionGroupTypes.RAGDOLL_COLLIDER_PART)
