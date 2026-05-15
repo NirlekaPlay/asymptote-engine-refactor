@@ -59,13 +59,13 @@ local function flush(self: ServerFaceControl)
 	self.head:SetAttribute(ATTRIBUTE_NAME, encode(self))
 end
 
-function ServerFaceControl.new(character: Model): ServerFaceControl
+function ServerFaceControl.new(character: Model, initialFaceAlias: FaceAlias?): ServerFaceControl
 	local head = character:FindFirstChild("Head") :: BasePart
 	assert(head, "ServerFaceControl: character has no Head")
 
 	local self = setmetatable({}, ServerFaceControl)
 	self.head = head
-	self._faceAlias = "None"
+	self._faceAlias = initialFaceAlias or "None"
 	self._eyesAlias = nil :: string?
 	self._mouthOverride = nil :: number? | boolean
 

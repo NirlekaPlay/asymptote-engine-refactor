@@ -52,16 +52,21 @@ local function applyFaceState(faceControl: ClientFaceControl.FaceControl, raw: s
 	end
 end
 
-local function setupServer(config: Configuration)
+local function setupServer(config: Configuration, initialFaceAlias)
 	local character = getCharacterFromConfig(config)
 	if not character then
+		return
+	end
+
+	if controls[config] ~= nil then
+		print("Attempt to setup face config on server that's already registered:", config)
 		return
 	end
 
 	local configMaid = Maid.new()
 	maid:giveTask(configMaid)
 
-	local control = ServerFaceControl.new(character)
+	local control = ServerFaceControl.new(character, initialFaceAlias)
 	controls[config] = control
 
 	configMaid:giveTask(config.AncestryChanged:Connect(function()
@@ -107,7 +112,7 @@ end
 --
 
 function CharacterFaceService.init()
-	local setup = if RunService:IsServer() then setupServer else setupClient
+	local setup = if RunService:IsServer() then setupServer else setupClient -- (a) this is fucking useless then
 
 	for _, config in CollectionService:GetTagged(CollectionTags.CHARACTER_FACE_CONFIG) do
 		if config:IsA("Configuration") then
@@ -115,14 +120,16 @@ function CharacterFaceService.init()
 		end
 	end
 
-	maid:giveTask(CollectionService:GetInstanceAddedSignal(CollectionTags.CHARACTER_FACE_CONFIG):Connect(function(config)
-		if config:IsA("Configuration") then
-			setup(config)
-		end
-	end))
+	if RunService:IsClient() then -- refer to (a)
+		maid:giveTask(CollectionService:GetInstanceAddedSignal(CollectionTags.CHARACTER_FACE_CONFIG):Connect(function(config)
+			if config:IsA("Configuration") then
+				setup(config)
+			end
+		end))
+	end
 end
 
-function CharacterFaceService.register(character: Model): ServerFaceControl.ServerFaceControl
+function CharacterFaceService.register(character: Model, initialFaceAlias): ServerFaceControl.ServerFaceControl
 	assert(RunService:IsServer(), "CharacterFaceService.register() should only be called from the server")
 
 	local existing = character:FindFirstChild("FaceConfig")
@@ -135,7 +142,7 @@ function CharacterFaceService.register(character: Model): ServerFaceControl.Serv
 	config.Parent = character
 	CollectionService:AddTag(config, CollectionTags.CHARACTER_FACE_CONFIG)
 
-	setupServer(config)
+	setupServer(config, initialFaceAlias)
 	return controls[config] :: ServerFaceControl.ServerFaceControl
 end
 

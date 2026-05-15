@@ -59,8 +59,7 @@ function AbstractNpc.new(scene, character: Model & { Humanoid: Humanoid, Humanoi
 		}
 	})
 	self.bodyRotationControl = BodyRotationControl.new(character, self.pathNavigation)
-	self.faceControl = CharacterFaceService.register(character)
-	self.faceControl:setFace("Neutral")
+	self.faceControl = CharacterFaceService.register(character, "Neutral")
 	self.lookControl = LookControl.new(character)
 	self.ragdollControl = RagdollControl.new(character)
 	self.reportControl = ReportControl.new(self :: any)
