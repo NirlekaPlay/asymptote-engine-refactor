@@ -10,7 +10,6 @@ local TypedRemotes = require(ReplicatedStorage.shared.network.remotes.TypedRemot
 local Maid = require(ReplicatedStorage.shared.util.misc.Maid)
 local CharacterFaceService = require(ReplicatedStorage.shared.world.entity.face.CharacterFaceService)
 local Level = require(ServerScriptService.server.world.level.Level)
-local LevelLoader = require(ServerScriptService.server.world.level.LevelLoader)
 local Clutter = require(ServerScriptService.server.world.level.scene.props.Clutter)
 local CollisionGroupManager = require(ServerScriptService.server.world.physics.collision.CollisionGroupManager)
 local CollisionGroupTypes = require(ServerScriptService.server.world.physics.collision.CollisionGroupTypes)
@@ -63,7 +62,7 @@ end
 
 main()
 
-level.scene = LevelLoader.loadFromFolder(workspace.DebugMission)
+level:init()
 
 RunService.PostSimulation:Connect(onPostSimulation)
 Players.PlayerAdded:Connect(onPlayerJoin)

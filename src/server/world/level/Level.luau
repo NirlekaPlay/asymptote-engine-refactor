@@ -2,7 +2,9 @@
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local Entity = require(ServerScriptService.server.world.entity.Entity)
+local LevelLoader = require(ServerScriptService.server.world.level.LevelLoader)
 local LevelCallback = require(ServerScriptService.server.world.level.entity.LevelCallback)
+local Scene = require(ServerScriptService.server.world.level.scene.Scene)
 
 local TICK_RATE = 1 / 20
 local MAX_TICKS_PER_FRAME = 5
@@ -16,6 +18,8 @@ Level.__index = Level
 export type Level = typeof(setmetatable({} :: {
 	isHandlingTick: boolean,
 	--
+	scene: Scene.Scene?,
+	--
 	_accumulator: number
 }, Level))
 
@@ -25,6 +29,7 @@ type LevelCallback = LevelCallback.LevelCallback<Entity>
 function Level.new(): Level
 	local this = setmetatable({
 		isHandlingTick = false,
+		scene = nil :: Scene.Scene?,
 		_accumulator = 0
 	}, Level)
 
@@ -32,6 +37,13 @@ function Level.new(): Level
 end
 
 --
+
+function Level.init(self: Level): ()
+	local levelFolder = workspace:FindFirstChild("DebugMission") or workspace:FindFirstChild("Level")
+	if levelFolder and levelFolder:IsA("Folder") then
+		self.scene = LevelLoader.loadFromFolder(levelFolder)
+	end
+end
 
 function Level.update(self: Level, deltaTime: number): ()
 	if self.isHandlingTick then
@@ -57,7 +69,9 @@ function Level.update(self: Level, deltaTime: number): ()
 end
 
 function Level.doUpdate(self: Level, deltaTime: number): ()
-	self.scene:update(deltaTime)
+	if self.scene then
+		self:update(deltaTime)
+	end
 end
 
 return Level
