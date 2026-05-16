@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local StarterPlayer = game:GetService("StarterPlayer")
+local CameraController = require(StarterPlayer.StarterPlayerScripts.client.modules.camera.CameraController)
 local DetectionMeterRenderer = require(StarterPlayer.StarterPlayerScripts.client.modules.renderer.hud.DetectionMeterRenderer)
 local DetectionMeter = require(StarterPlayer.StarterPlayerScripts.client.modules.ui.DetectionMeter)
 local BlendStack = require(ReplicatedStorage.shared.cinemachine.camera.BlendStack)
@@ -22,6 +23,7 @@ local TypedRemotes = require(ReplicatedStorage.shared.network.remotes.TypedRemot
 local CharacterFaceService = require(ReplicatedStorage.shared.world.entity.face.CharacterFaceService)
 require(StarterPlayer.StarterPlayerScripts.client.modules.ui.screens.ObjectivesScreen)
 
+CameraController.init()
 CharacterFaceService.init()
 
 -- Detection
@@ -45,6 +47,7 @@ TypedRemotes.ClientboundDetection.OnClientEvent:Connect(function(detectionDatas)
 end)
 
 RunService.PreRender:Connect(function(deltaTime)
+	CameraController.update(deltaTime)
 	DetectionMeterRenderer.clearBatch()
 	DetectionMeter.render(deltaTime)
 	DetectionMeterRenderer.renderBatchedCalls()
