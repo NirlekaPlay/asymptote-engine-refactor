@@ -3,9 +3,11 @@
 local ContextActionService = game:GetService("ContextActionService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterGui = game:GetService("StarterGui")
 local StarterPlayer = game:GetService("StarterPlayer")
 local Workspace = game:GetService("Workspace")
+local Signal = require(ReplicatedStorage.shared.thirdparty.Signal)
 local TransparencyController = require(StarterPlayer.StarterPlayerScripts.client.modules.camera.TransparencyController)
 local CoreCall = require(StarterPlayer.StarterPlayerScripts.client.modules.util.CoreCall)
 
@@ -44,6 +46,13 @@ camera.CameraType = Enum.CameraType.Scriptable
 	@class CameraController
 ]=]
 local CameraController = {}
+CameraController.afterEvents = {
+	onZoomChanged = Signal.new() :: Signal.Signal<boolean>
+}
+
+function CameraController.isFirstPerson(): boolean
+	return zoomState == 0
+end
 
 function CameraController.setHoldLean(holdToLean: boolean): ()
 	holdLean = holdToLean
@@ -136,12 +145,11 @@ function CameraController.init(): ()
 			rotY -= math.rad(input.Delta.X * 0.3)
 			rotX = math.clamp(rotX, math.rad(-80), math.rad(80))
 		elseif input.UserInputType == Enum.UserInputType.MouseWheel then
-			-- SCROLL UP (Z > 0) -> First Person
-			-- SCROLL DOWN (Z < 0) -> Third Person
-			if input.Position.Z > 0 then
-				zoomState = 0
-			else
-				zoomState = 1
+			local newZoomState = if input.Position.Z > 0 then 0 else 1
+			if newZoomState ~= zoomState then
+				zoomState = newZoomState
+				local isFirstPerson = zoomState == 0
+				CameraController.afterEvents.onZoomChanged:Fire(isFirstPerson)
 			end
 		end
 	end)
