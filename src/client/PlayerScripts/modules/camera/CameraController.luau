@@ -28,6 +28,9 @@ local zoomState = 1 -- 0 for First Person, 1 for Third Person
 local currentZoom = 1 -- Used for the interpolation/smooth transition
 local currentSide = 1 -- 1 right, -1 left
 local targetSide = 0 -- The goal (1, -1, or 0)
+local defaultTargetSide = 1
+local keyHeldLeanLeft = false
+local keyHeldLeanRight = false
 local holdLean = true
 local rotX, rotY = 0, 0
 
@@ -43,7 +46,12 @@ camera.CameraType = Enum.CameraType.Scriptable
 local CameraController = {}
 
 function CameraController.setHoldLean(holdToLean: boolean): ()
-	holdLean = holdLean
+	holdLean = holdToLean
+	if not holdToLean and targetSide == 0 then
+		targetSide = defaultTargetSide
+	elseif holdToLean and not (keyHeldLeanLeft or keyHeldLeanRight) then
+		targetSide = 0
+	end
 end
 
 function CameraController.update(deltaTime: number): ()
@@ -57,6 +65,10 @@ function CameraController.update(deltaTime: number): ()
 	else
 		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 		UserInputService.MouseIconEnabled = true
+	end
+
+	if holdLean and targetSide ~= 0 then
+		targetSide = if (keyHeldLeanLeft or keyHeldLeanRight) then targetSide else 0
 	end
 
 	local char = player.Character :: Instance
@@ -137,18 +149,24 @@ function CameraController.init(): ()
 	ContextActionService:BindAction("AsymptoteLeanRight", function(_, inputState)
 		if inputState == Enum.UserInputState.Begin then
 			targetSide = 1
+			defaultTargetSide = 1
 		elseif inputState == Enum.UserInputState.End and holdLean and targetSide ~= -1 then
 			targetSide = 0
 		end
+
+		keyHeldLeanRight = if inputState == Enum.UserInputState.Begin then true else false
 		return Enum.ContextActionResult.Pass
 	end, false, Enum.KeyCode.E)
 
 	ContextActionService:BindAction("AsymptoteLeanLeft", function(_, inputState)
 		if inputState == Enum.UserInputState.Begin then
 			targetSide = -1
+			defaultTargetSide = -1
 		elseif inputState == Enum.UserInputState.End and holdLean and targetSide ~= 1 then
 			targetSide = 0
 		end
+
+		keyHeldLeanLeft = if inputState == Enum.UserInputState.Begin then true else false
 		return Enum.ContextActionResult.Pass
 	end, false, Enum.KeyCode.Q)
 end
