@@ -41,6 +41,14 @@ local holdLean = true
 local rotX, rotY = 0, 0
 local targetFov = DEFAULT_FOV
 
+type OffsetData = {
+	priority: number,
+	value: CFrame,
+}
+
+local cameraOffsets: { [string]: OffsetData } = {}
+local sortedOffsetKeys: { string } = {}
+
 local cameraRaycastParams = RaycastParams.new()
 cameraRaycastParams.CollisionGroup = "ClientCamOcclusionRay"
 cameraRaycastParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -66,6 +74,21 @@ function CameraController.setHoldLean(holdToLean: boolean): ()
 	elseif holdToLean and not (keyHeldLeanLeft or keyHeldLeanRight) then
 		targetSide = 0
 	end
+end
+
+function CameraController.setOffsetThisFrame(key: string, priority: number, offset: CFrame): ()
+	if not cameraOffsets[key] then
+		table.insert(sortedOffsetKeys, key)
+	end
+	
+	cameraOffsets[key] = {
+		priority = priority,
+		value = offset,
+	}
+
+	table.sort(sortedOffsetKeys, function(a, b)
+		return cameraOffsets[a].priority < cameraOffsets[b].priority
+	end)
 end
 
 function CameraController.update(deltaTime: number): ()
@@ -125,7 +148,18 @@ function CameraController.update(deltaTime: number): ()
 	local headPos = pivotPos
 	local actualPos = headPos:Lerp(finalPos, currentZoom)
 
-	camera.CFrame = CFrame.new(actualPos, actualPos + baseCF.LookVector)
+	local finalOffset = CFrame.identity
+	for _, key in sortedOffsetKeys do
+		local data = cameraOffsets[key]
+		if data then
+			finalOffset = finalOffset * data.value
+		end
+	end
+
+	table.clear(sortedOffsetKeys)
+	table.clear(cameraOffsets)
+
+	camera.CFrame = CFrame.new(actualPos, actualPos + baseCF.LookVector) * finalOffset
 	
 	if zoomState == 1 then
 		transparencyController:show()
