@@ -14,7 +14,7 @@ local SHOULDER = 2.5
 local TWEEN_SPEED = 0.2
 local ZOOM_LERP_SPEED = 0.1
 local CAMERA_RADIUS = 0.5 -- padding so screen edges don't clip walls
-local CAMERA_HEIGHT_OFFSET = 2.5
+local CAMERA_HEIGHT_OFFSET = 1.5
 
 local player = Players.LocalPlayer
 local camera = Workspace.CurrentCamera
@@ -73,7 +73,7 @@ function CameraController.update(deltaTime: number): ()
 
 	local char = player.Character :: Instance
 	local root = char and char:FindFirstChild("HumanoidRootPart") :: BasePart
-	local head = char and char:FindFirstChild("Head") :: BasePart
+	--local head = char and char:FindFirstChild("Head") :: BasePart
 	if not root then
 		return
 	end
@@ -106,7 +106,7 @@ function CameraController.update(deltaTime: number): ()
 		end
 	end
 
-	local headPos = head and head.Position or pivotPos
+	local headPos = pivotPos
 	local actualPos = headPos:Lerp(finalPos, currentZoom)
 
 	camera.CFrame = CFrame.new(actualPos, actualPos + baseCF.LookVector)
