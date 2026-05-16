@@ -18,6 +18,10 @@ local ZOOM_LERP_SPEED = 0.1
 local CAMERA_RADIUS = 0.5 -- padding so screen edges don't clip walls
 local CAMERA_HEIGHT_OFFSET = 1.5
 
+local DEFAULT_FOV = 70
+local ZOOMED_FOV_PERCENT = 0.60 -- Zooms in by 40% (Displays 60% of original FOV)
+local FOV_LERP_SPEED = 0.1
+
 local player = Players.LocalPlayer
 local camera = Workspace.CurrentCamera
 
@@ -35,6 +39,7 @@ local keyHeldLeanLeft = false
 local keyHeldLeanRight = false
 local holdLean = true
 local rotX, rotY = 0, 0
+local targetFov = DEFAULT_FOV
 
 local cameraRaycastParams = RaycastParams.new()
 cameraRaycastParams.CollisionGroup = "ClientCamOcclusionRay"
@@ -91,6 +96,8 @@ function CameraController.update(deltaTime: number): ()
 
 	currentZoom = currentZoom + (zoomState - currentZoom) * (deltaTime / ZOOM_LERP_SPEED)
 	currentSide = currentSide + (targetSide - currentSide) * (deltaTime / TWEEN_SPEED)
+
+	camera.FieldOfView = camera.FieldOfView + (targetFov - camera.FieldOfView) * (deltaTime / FOV_LERP_SPEED)
 	
 	local baseCF = CFrame.new(root.Position) * CFrame.Angles(0, rotY, 0) * CFrame.Angles(rotX, 0, 0)
 
@@ -177,6 +184,15 @@ function CameraController.init(): ()
 		keyHeldLeanLeft = if inputState == Enum.UserInputState.Begin then true else false
 		return Enum.ContextActionResult.Pass
 	end, false, Enum.KeyCode.Q)
+
+	ContextActionService:BindAction("AsymptoteZoom", function(actionName: string, inputState: Enum.UserInputState, inputObject: InputObject): Enum.ContextActionResult?
+		if inputState == Enum.UserInputState.Begin then
+			targetFov = DEFAULT_FOV * ZOOMED_FOV_PERCENT
+		elseif inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
+			targetFov = DEFAULT_FOV
+		end
+		return Enum.ContextActionResult.Pass
+	end, false, Enum.UserInputType.MouseButton2)
 end
 
 return CameraController
