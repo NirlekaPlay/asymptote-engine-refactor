@@ -224,6 +224,8 @@ function LevelLoader.createCellsFromFolder(parsedConfigs, cellsFolder: Folder?):
 		table.insert(cells, cell)
 	end
 
+	cellsFolder:Destroy()
+
 	return cells
 end
 
