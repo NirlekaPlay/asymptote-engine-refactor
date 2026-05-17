@@ -5,7 +5,7 @@
 
     "ReplicatedStorage": {
       "shared": {
-        "$path": "src/shared"
+        "$path": "src/shared/ReplicatedStorage"
       }
     },
 
@@ -32,23 +32,12 @@
         "FilteringEnabled": true
       }
     },
-    "Lighting": {
-      "$properties": {
-        "Ambient": [
-          0,
-          0,
-          0
-        ],
-        "Brightness": 2,
-        "GlobalShadows": true,
-        "Outlines": false,
-        "Technology": "Voxel"
-      }
-    },
+    "Lighting": {},
     "SoundService": {
       "$properties": {
         "RespectFilteringEnabled": true
-      }
+      },
+      "$path": "src/shared/SoundService"
     }
   }
 }

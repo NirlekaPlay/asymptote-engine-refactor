@@ -1,0 +1,349 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<Meta name="ExplicitAutoJoints">true</Meta>
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Folder" referent="RBX05338f869c9447589f2f8fe5b2aa696e">
+		<Properties>
+			<BinaryString name="AttributesSerialize"></BinaryString>
+			<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+			<bool name="DefinesCapabilities">false</bool>
+			<string name="Name">Audio</string>
+			<int64 name="SourceAssetId">-1</int64>
+			<BinaryString name="Tags"></BinaryString>
+		</Properties>
+		<Item class="Folder" referent="RBX5940648df8484256b7df55c7fc25dbde">
+			<Properties>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">Busses</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<BinaryString name="Tags"></BinaryString>
+			</Properties>
+			<Item class="Folder" referent="RBX57250abe67314fcb9469267fabb59a05">
+				<Properties>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">UI</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<BinaryString name="Tags"></BinaryString>
+				</Properties>
+				<Item class="AudioFader" referent="RBXaea192de80144976bf3f4ed2c723c51c">
+					<Properties>
+						<bool name="Bypass">false</bool>
+						<float name="Volume">1</float>
+						<BinaryString name="AttributesSerialize"></BinaryString>
+						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+						<bool name="DefinesCapabilities">false</bool>
+						<string name="Name">AudioFader</string>
+						<int64 name="SourceAssetId">-1</int64>
+						<BinaryString name="Tags"></BinaryString>
+					</Properties>
+					<Item class="Wire" referent="RBX09dbb1cd460442a69787cfd2ce7e891a">
+						<Properties>
+							<Ref name="SourceInstance">RBXaea192de80144976bf3f4ed2c723c51c</Ref>
+							<string name="SourceName">Output</string>
+							<Ref name="TargetInstance">RBX809875bcac4a41edb86dc22ce2fb130a</Ref>
+							<string name="TargetName">Input</string>
+							<BinaryString name="AttributesSerialize"></BinaryString>
+							<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+							<bool name="DefinesCapabilities">false</bool>
+							<string name="Name">Wire</string>
+							<int64 name="SourceAssetId">-1</int64>
+							<BinaryString name="Tags"></BinaryString>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="AudioEqualizer" referent="RBX5f7a75ccdbb9488ab0c988cf62f7aea4">
+					<Properties>
+						<bool name="Bypass">true</bool>
+						<float name="HighGain">0</float>
+						<float name="LowGain">0</float>
+						<float name="MidGain">0</float>
+						<NumberRange name="MidRange">400 4000 </NumberRange>
+						<BinaryString name="AttributesSerialize"></BinaryString>
+						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+						<bool name="DefinesCapabilities">false</bool>
+						<string name="Name">AudioEqualizer</string>
+						<int64 name="SourceAssetId">-1</int64>
+						<BinaryString name="Tags"></BinaryString>
+					</Properties>
+					<Item class="Wire" referent="RBX52584296e9f94ae0bfa12be3a497d03e">
+						<Properties>
+							<Ref name="SourceInstance">RBX5f7a75ccdbb9488ab0c988cf62f7aea4</Ref>
+							<string name="SourceName">Output</string>
+							<Ref name="TargetInstance">RBXaea192de80144976bf3f4ed2c723c51c</Ref>
+							<string name="TargetName">Input</string>
+							<BinaryString name="AttributesSerialize"></BinaryString>
+							<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+							<bool name="DefinesCapabilities">false</bool>
+							<string name="Name">Wire</string>
+							<int64 name="SourceAssetId">-1</int64>
+							<BinaryString name="Tags"></BinaryString>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="AudioCompressor" referent="RBX6233071b6e3545d591fbfde4cffaf86b">
+					<Properties>
+						<float name="Attack">0.100000001</float>
+						<bool name="Bypass">true</bool>
+						<float name="MakeupGain">0</float>
+						<float name="Ratio">40</float>
+						<float name="Release">0.100000001</float>
+						<float name="Threshold">-40</float>
+						<BinaryString name="AttributesSerialize"></BinaryString>
+						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+						<bool name="DefinesCapabilities">false</bool>
+						<string name="Name">AudioCompressor</string>
+						<int64 name="SourceAssetId">-1</int64>
+						<BinaryString name="Tags"></BinaryString>
+					</Properties>
+					<Item class="Wire" referent="RBXd9407c8b05c94b99abd769a2ce5f11a1">
+						<Properties>
+							<Ref name="SourceInstance">RBX6233071b6e3545d591fbfde4cffaf86b</Ref>
+							<string name="SourceName">Output</string>
+							<Ref name="TargetInstance">RBX5f7a75ccdbb9488ab0c988cf62f7aea4</Ref>
+							<string name="TargetName">Input</string>
+							<BinaryString name="AttributesSerialize"></BinaryString>
+							<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+							<bool name="DefinesCapabilities">false</bool>
+							<string name="Name">Wire</string>
+							<int64 name="SourceAssetId">-1</int64>
+							<BinaryString name="Tags"></BinaryString>
+						</Properties>
+					</Item>
+				</Item>
+			</Item>
+			<Item class="Folder" referent="RBXc1d1b375d76446d1993568daca827766">
+				<Properties>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">World</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<BinaryString name="Tags"></BinaryString>
+				</Properties>
+				<Item class="AudioFader" referent="RBX43a364b7af5b49168ee8d5874130674a">
+					<Properties>
+						<bool name="Bypass">false</bool>
+						<float name="Volume">1</float>
+						<BinaryString name="AttributesSerialize"></BinaryString>
+						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+						<bool name="DefinesCapabilities">false</bool>
+						<string name="Name">AudioFader</string>
+						<int64 name="SourceAssetId">-1</int64>
+						<BinaryString name="Tags"></BinaryString>
+					</Properties>
+					<Item class="Wire" referent="RBXc5600f691fc043a9bc820f6472b02060">
+						<Properties>
+							<Ref name="SourceInstance">RBX43a364b7af5b49168ee8d5874130674a</Ref>
+							<string name="SourceName">Output</string>
+							<Ref name="TargetInstance">RBX809875bcac4a41edb86dc22ce2fb130a</Ref>
+							<string name="TargetName">Input</string>
+							<BinaryString name="AttributesSerialize"></BinaryString>
+							<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+							<bool name="DefinesCapabilities">false</bool>
+							<string name="Name">Wire</string>
+							<int64 name="SourceAssetId">-1</int64>
+							<BinaryString name="Tags"></BinaryString>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="AudioEqualizer" referent="RBX670921f0cd5946c38443a79cca59c7c9">
+					<Properties>
+						<bool name="Bypass">true</bool>
+						<float name="HighGain">0</float>
+						<float name="LowGain">0</float>
+						<float name="MidGain">0</float>
+						<NumberRange name="MidRange">400 4000 </NumberRange>
+						<BinaryString name="AttributesSerialize"></BinaryString>
+						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+						<bool name="DefinesCapabilities">false</bool>
+						<string name="Name">AudioEqualizer</string>
+						<int64 name="SourceAssetId">-1</int64>
+						<BinaryString name="Tags"></BinaryString>
+					</Properties>
+					<Item class="Wire" referent="RBXdb76641b53ca4a92b88a8c7771c456fc">
+						<Properties>
+							<Ref name="SourceInstance">RBX670921f0cd5946c38443a79cca59c7c9</Ref>
+							<string name="SourceName">Output</string>
+							<Ref name="TargetInstance">RBX43a364b7af5b49168ee8d5874130674a</Ref>
+							<string name="TargetName">Input</string>
+							<BinaryString name="AttributesSerialize"></BinaryString>
+							<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+							<bool name="DefinesCapabilities">false</bool>
+							<string name="Name">Wire</string>
+							<int64 name="SourceAssetId">-1</int64>
+							<BinaryString name="Tags"></BinaryString>
+						</Properties>
+					</Item>
+				</Item>
+				<Item class="AudioCompressor" referent="RBX182de01424504c62b6e9c1a988e852db">
+					<Properties>
+						<float name="Attack">0.100000001</float>
+						<bool name="Bypass">true</bool>
+						<float name="MakeupGain">0</float>
+						<float name="Ratio">40</float>
+						<float name="Release">0.100000001</float>
+						<float name="Threshold">-40</float>
+						<BinaryString name="AttributesSerialize"></BinaryString>
+						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+						<bool name="DefinesCapabilities">false</bool>
+						<string name="Name">AudioCompressor</string>
+						<int64 name="SourceAssetId">-1</int64>
+						<BinaryString name="Tags"></BinaryString>
+					</Properties>
+					<Item class="Wire" referent="RBXcbd5b4bd85c9400ebc29ef95c3d67aa6">
+						<Properties>
+							<Ref name="SourceInstance">RBX182de01424504c62b6e9c1a988e852db</Ref>
+							<string name="SourceName">Output</string>
+							<Ref name="TargetInstance">RBX670921f0cd5946c38443a79cca59c7c9</Ref>
+							<string name="TargetName">Input</string>
+							<BinaryString name="AttributesSerialize"></BinaryString>
+							<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+							<bool name="DefinesCapabilities">false</bool>
+							<string name="Name">Wire</string>
+							<int64 name="SourceAssetId">-1</int64>
+							<BinaryString name="Tags"></BinaryString>
+						</Properties>
+					</Item>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="AudioDeviceOutput" referent="RBXa32e4c926ca6417db747b303f56c31b8">
+			<Properties>
+				<Ref name="Player">null</Ref>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">MainOutput</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<BinaryString name="Tags"></BinaryString>
+			</Properties>
+		</Item>
+		<Item class="AudioListener" referent="RBXcaca929103a34b5ba54a3895b6432f65">
+			<Properties>
+				<bool name="AcousticSimulationEnabled">true</bool>
+				<BinaryString name="AngleAttenuation">AA==</BinaryString>
+				<string name="AudioInteractionGroup"></string>
+				<BinaryString name="DistanceAttenuation">AA==</BinaryString>
+				<Ref name="PositionOverride">null</Ref>
+				<token name="SimulationFidelity">1</token>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">MainListener</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<BinaryString name="Tags"></BinaryString>
+			</Properties>
+			<Item class="Wire" referent="RBX2e4d36fbfc8a479fa71c076ed18021e8">
+				<Properties>
+					<Ref name="SourceInstance">RBXcaca929103a34b5ba54a3895b6432f65</Ref>
+					<string name="SourceName">Output</string>
+					<Ref name="TargetInstance">RBX182de01424504c62b6e9c1a988e852db</Ref>
+					<string name="TargetName">Input</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">Wire</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<BinaryString name="Tags"></BinaryString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="AudioFader" referent="RBX809875bcac4a41edb86dc22ce2fb130a">
+			<Properties>
+				<bool name="Bypass">false</bool>
+				<float name="Volume">1</float>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">MainFader</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<BinaryString name="Tags"></BinaryString>
+			</Properties>
+			<Item class="Wire" referent="RBXe12968e1f9fd4575be63720bb6007003">
+				<Properties>
+					<Ref name="SourceInstance">RBX809875bcac4a41edb86dc22ce2fb130a</Ref>
+					<string name="SourceName">Output</string>
+					<Ref name="TargetInstance">RBXa32e4c926ca6417db747b303f56c31b8</Ref>
+					<string name="TargetName">Input</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">Wire</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<BinaryString name="Tags"></BinaryString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Script" referent="RBXcb4b8fd60abe4ca88e99b2c64793261e">
+			<Properties>
+				<ProtectedString name="Source"><![CDATA[--[[
+	Listener - Initializes the main AudioListener, placing it in the camera.
+--]]
+
+local Workspace = game:GetService("Workspace")
+
+local camera = Workspace.CurrentCamera
+local listener = script.Parent.MainListener
+
+listener.Parent = camera
+]]></ProtectedString>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<token name="RunContext">2</token>
+				<string name="ScriptGuid">{ac017576-9a50-4e34-89bf-8d0dcbdfa17a}</string>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">Listener</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<BinaryString name="Tags"></BinaryString>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX272204662c7b493396affc72614cfbc9">
+			<Properties>
+				<ProtectedString name="Source"><![CDATA[--[[
+	AutoPlayAudio - A utility script to automatically play AudioPlayers tagged with "AutoPlayAudio".
+	This is used since AudioPlayers do not have the same auto play functionality as legacy sounds.
+--]]
+
+local CollectionService = game:GetService("CollectionService")
+
+local AUTO_PLAY_TAG = "AutoPlayAudio"
+
+local function onAudioPlayerAdded(audioPlayer: Instance)
+	assert(
+		audioPlayer:IsA("AudioPlayer"),
+		`Instance tagged with {AUTO_PLAY_TAG} ({audioPlayer:GetFullName()}) expected to be an AudioPlayer, got {audioPlayer.ClassName}`
+	)
+
+	audioPlayer:Play()
+end
+
+local function initialize()
+	CollectionService:GetInstanceAddedSignal(AUTO_PLAY_TAG):Connect(onAudioPlayerAdded)
+
+	for _, audioPlayer in CollectionService:GetTagged(AUTO_PLAY_TAG) do
+		onAudioPlayerAdded(audioPlayer)
+	end
+end
+
+initialize()
+]]></ProtectedString>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<token name="RunContext">2</token>
+				<string name="ScriptGuid">{4c5fdfac-08d7-49db-bec0-5b1e87c1167a}</string>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">AutoPlayAudio</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<BinaryString name="Tags"></BinaryString>
+			</Properties>
+		</Item>
+	</Item>
+</roblox>
