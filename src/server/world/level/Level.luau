@@ -70,7 +70,7 @@ end
 
 function Level.doUpdate(self: Level, deltaTime: number): ()
 	if self.scene then
-		self:update(deltaTime)
+		self.scene:update(deltaTime)
 	end
 end
 
