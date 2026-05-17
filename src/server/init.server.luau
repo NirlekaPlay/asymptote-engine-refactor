@@ -24,6 +24,7 @@ local function main(): ()
 end
 
 local function onPostSimulation(deltaTime: number): ()
+	debug.setmemorycategory("Server.onPostSimulation")
 	local frameHasListeningClients = DebugPackets.hasListeningClients(DebugPacketTypes.DEBUG_BRAIN)
 	level:update(deltaTime)
 	if frameHasListeningClients then

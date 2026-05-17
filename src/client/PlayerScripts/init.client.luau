@@ -46,8 +46,14 @@ TypedRemotes.ClientboundDetection.OnClientEvent:Connect(function(detectionDatas)
 	end
 end)
 
-RunService.PreRender:Connect(function(deltaTime)
+-- Start execution before everything.
+-- Fixes shit like jittery viewmodel.
+-- Took 2 hours to fix this fucking bullshit.
+RunService:BindToRenderStep("Camera", Enum.RenderPriority.First.Value, function(deltaTime)
 	CameraController.update(deltaTime)
+end)
+
+RunService.PreRender:Connect(function(deltaTime)
 	DetectionMeterRenderer.clearBatch()
 	DetectionMeter.render(deltaTime)
 	DetectionMeterRenderer.renderBatchedCalls()
