@@ -9,6 +9,7 @@ local StarterPlayer = game:GetService("StarterPlayer")
 local Workspace = game:GetService("Workspace")
 local Signal = require(ReplicatedStorage.shared.thirdparty.Signal)
 local TransparencyController = require(StarterPlayer.StarterPlayerScripts.client.modules.camera.TransparencyController)
+local CharacterController = require(StarterPlayer.StarterPlayerScripts.client.modules.character.CharacterController)
 local CoreCall = require(StarterPlayer.StarterPlayerScripts.client.modules.util.CoreCall)
 
 local DISTANCE = 8
@@ -26,6 +27,7 @@ local player = Players.LocalPlayer
 local camera = Workspace.CurrentCamera
 
 local transparencyController = TransparencyController.new()
+local characterController = CharacterController.new()
 
 local isDevConsoleVisible = CoreCall.call("StarterGui", "GetCore", "DevConsoleVisible")
 local shouldLockAndHideMouse = true
@@ -110,7 +112,6 @@ function CameraController.update(deltaTime: number): ()
 
 	local char = player.Character :: Instance
 	local root = char and char:FindFirstChild("HumanoidRootPart") :: BasePart
-	--local head = char and char:FindFirstChild("Head") :: BasePart
 	if not root then
 		return
 	end
@@ -168,16 +169,20 @@ function CameraController.update(deltaTime: number): ()
 	end
 	transparencyController:update(deltaTime)
 
+	characterController:update(deltaTime)
+
 	debug.profileend()
 end
 
 function CameraController.init(): ()
 	if player.Character then
 		transparencyController:setCharacter(player.Character)
+		characterController:setCharacter(player.Character)
 	end
 
 	player.CharacterAdded:Connect(function(character)
 		transparencyController:setCharacter(character)
+		characterController:setCharacter(character)
 	end)
 
 	UserInputService.InputChanged:Connect(function(input)
@@ -191,6 +196,9 @@ function CameraController.init(): ()
 				zoomState = newZoomState
 				local isFirstPerson = zoomState == 0
 				CameraController.afterEvents.onZoomChanged:Fire(isFirstPerson)
+				
+				-- Force look tracking if zoomed into first person
+				characterController:setFaceAlongCamera(isFirstPerson)
 			end
 		end
 	end)
@@ -222,8 +230,10 @@ function CameraController.init(): ()
 	ContextActionService:BindAction("AsymptoteZoom", function(actionName: string, inputState: Enum.UserInputState, inputObject: InputObject): Enum.ContextActionResult?
 		if inputState == Enum.UserInputState.Begin then
 			targetFov = DEFAULT_FOV * ZOOMED_FOV_PERCENT
+			characterController:setFaceAlongCamera(true)
 		elseif inputState == Enum.UserInputState.End or inputState == Enum.UserInputState.Cancel then
 			targetFov = DEFAULT_FOV
+			characterController:setFaceAlongCamera(zoomState == 0)
 		end
 		return Enum.ContextActionResult.Pass
 	end, false, Enum.UserInputType.MouseButton2)
