@@ -57,6 +57,12 @@ cameraRaycastParams.FilterType = Enum.RaycastFilterType.Exclude
 
 camera.CameraType = Enum.CameraType.Scriptable
 
+camera:GetPropertyChangedSignal("CameraType"):Connect(function()
+	if camera.CameraType ~= Enum.CameraType.Scriptable then
+		camera.CameraType = Enum.CameraType.Scriptable
+	end
+end)
+
 --[=[
 	@class CameraController
 ]=]
