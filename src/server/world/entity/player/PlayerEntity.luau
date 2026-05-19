@@ -12,6 +12,8 @@ local EntityInLevelCallback = require(ServerScriptService.server.world.level.ent
 local Scene = require(ServerScriptService.server.world.level.scene.Scene)
 local StateComponentRegistry = require(ServerScriptService.server.world.level.scene.components.registry.StateComponentRegistry)
 
+local VEC3_ZERO = Vector3.zero
+
 --[=[
 	@class PlayerEntity
 ]=]
@@ -181,7 +183,12 @@ function PlayerEntity.update(self, deltaTime: number): ()
 end
 
 function PlayerEntity.getPosition(self): Vector3
-	return self.character.HumanoidRootPart.Position
+	local root = self.character.HumanoidRootPart
+	if not root then
+		return root.Position
+	else
+		return self.lastPos or VEC3_ZERO
+	end
 end
 
 function PlayerEntity.getWorldInstance(self): Instance
